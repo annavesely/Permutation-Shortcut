@@ -65,7 +65,7 @@
 \paragraph{Permutation test with centered statistics.}
 Let $F=\{1,\ldots, f\}$ be the full model, while $S\subseteq F$ is the subset under test by closed testing: $H_S$ is rejected if and only if $H_V$ is rejected for all $V$ such that $S\subseteq V\subseteq F$.
 
-Assume that $T_i$ is the \textbf{standardized} test statistic for the univariate hypothesis $H_i$ and that, for each $V\subseteq F$, the test statistic for $H_V$ can be written as the sum
+Assume that $T_i$ is the standardized test statistic for the univariate hypothesis $H_i$ and that, for each $V\subseteq F$, the test statistic for $H_V$ can be written as the sum
 \[T_V=\sum_{i\in V}T_i.\]
 Given a set $\mathcal{P}$ of random permutations (including the identity $\pi_1=$ id) with $|\mathcal{P}|=B$, consider the matrix
 \begin{align*}
@@ -132,7 +132,7 @@ Let $c_{L(v)}$ and $c_{U(v)}$ be the ($1-\alpha$)-quantiles of the distribution 
 \end{figure}
 
 \vspace{3mm}
-\paragraph{Test.} All the possible superset sizes $v=0,1,\ldots,m$ are checked with the above-mentioned procedure:
+\paragraph{Test.} All the possible superset sizes $v\in\{0,1,\ldots,m\}$ are checked with the above-mentioned procedure:
 \begin{itemize}
 \item whenever a size $v^*$ leading to a non-rejection ($c_{L(v^*)}\geq 0$) is found, the algorithm stops and $H_S$ is not rejected;
 \item if all sizes $v$ are such that the corresponding hypotheses are rejected with certainty ($c_{U(v)}<0$), $H_S$ is rejected;
@@ -141,26 +141,26 @@ Let $c_{L(v)}$ and $c_{U(v)}$ be the ($1-\alpha$)-quantiles of the distribution 
 
 The analysis starts with the extremes $v=0$ and $v=m$, corresponding to $S$ and $F$. In both cases the output cannot be indecisive, as the lower and upper bounds coincide: $c_{L(0)}=c_{U(0)}=c_0$ and $c_{L(m)}=c_{U(m)}=c_m$. If neither case leads to a non-rejection, the other sizes are checked in
 \begin{itemize}
-\item increasing order ($v=1,\ldots,m-1$) if $c_{m}\leq c_{0}<0$;
-\item decreasing order ($v=m-1,\ldots,1$) if $c_{0}< c_{m}<0$.
+\item increasing order ($1,\ldots,m-1$) if $c_{m}\leq c_{0}<0$;
+\item decreasing order ($m-1,\ldots,1$) if $c_{0}< c_{m}<0$.
 \end{itemize}
-Indeed, in the first case the rejection for $S$ is less extreme than that for $F$; hence we expect that an eventual non-rejection will be likely found with small sizes, when adding one or more indices to $S$. On the contrary, in the second case we expect that an eventual non-rejection will be likely found when removing one or more indices from $F$.
+Indeed, in the first case the rejection for $v=0$ is less extreme than that for $v=m$; hence we expect that an eventual non-rejection will likely be found with small sizes, when adding one or more indices to $S$. On the contrary, in the second case we expect that an eventual non-rejection will likely be found when removing one or more indices from $F$.
 
 \vspace{3mm}
 \paragraph{Step-by-step method.} Let $i_1$ be the index of the highest observed statistic in $F\setminus S$,
-\[T_{i_1}=\max\{T_j\,;\,j\in F\setminus S\},\]
+\[T_{i_1}=\max\{T_j\,:\,j\in F\setminus S\},\]
 corresponding to the centered statistic $D_{c,1}$. Similarly, let $i_n$ be the index of the $n$-th highest observed statistic, corresponding to $D_{c,n}$.
 
 For each size $v$ leading to an indecisive outcome, the set $\mathcal{V}_v$ is partitioned in
 \begin{itemize}
-\item $\mathcal{V}_v(-i_1)=\{V\in\mathcal{V}\,:\,i_1\notin V\}=\{V\,:\,S\subseteq V\subseteq F\setminus\{i_1\},\;|V|=v+s\}$
-\item $\mathcal{V}_v(+i_1)=\{V\in\mathcal{V}\,:\,i_1\in V\}=\{V\,:\,S\cup\{i_1\}\subseteq V\subseteq F,\;|V|=v+s\}$.
+\item $\mathcal{V}_v(-i_1)=\{V\in\mathcal{V}_v\,:\,i_1\notin V\}=\{V\,:\,S\subseteq V\subseteq F\setminus\{i_1\},\;|V|=v+s\}$
+\item $\mathcal{V}_v(+i_1)=\{V\in\mathcal{V}_v\,:\,i_1\in V\}=\{V\,:\,S\cup\{i_1\}\subseteq V\subseteq F,\;|V|=v+s\}$.
 \end{itemize}
 We expect that the quantities $D_{i_1}^{\pi}=T_{i_1}^{\pi}-T_{i_1}$ will likely be small, and thus in the analysis of $(-i_1)$ the lower bound will likely increase. In both cases, however, the bounds will never become wider.
 
 The step-by-step method is a depth-first search. First, it explores the cases $(-i_1)$ and $(+i_1)$, and enumerates the eventual indecisive sizes. If a non-rejection is found, it stops and $H_S$ is not rejected. Otherwise it further divides the first case into $(-i_1,-i_2)$ and $(-i_1,+i_2)$. Such procedure is iterated until $(-i_1,\ldots,-i_h)$ produces no indecisive sizes; then the algorithm analyzes $(-i_1,\ldots,-i_{h-1},+i_h)$.
 
-The cases to be examined are stacked in a last-in-first-out pile. At each step, the first element is removed, and the two elements derived as subcases, if non-null, are added to the list:
+The cases to be examined are stacked into a last-in-first-out pile. At each step, the first element is removed, and the two subcases, if having some indecisive sizes, are added to the list:
 \begin{align*}
 \begin{matrix}
 \text{step 1} & (-i_1) & (+i_1) &  &  & \\
@@ -170,155 +170,7 @@ The cases to be examined are stacked in a last-in-first-out pile. At each step, 
 \end{matrix}
 \end{align*}
 
-Each element of the list is characterized by
-\begin{itemize}
-\item $n$, the total number of test statistics that have been considered (removed or kept);
-\item $D_{\text{fixed}}$, the sum of $D_S$ and the test statistics that have been kept;
-\item $ind.free$, the vector of the indecisive sizes minus the number of kept statistics.
-\end{itemize}
 
-When an element is divided into subcases, the statistics corresponding to indices $i_1,\ldots,i_{n}$ are removed from $D_c$ to define $D_{c\text{(new)}}$. Moreover, $D_{\text{fixed(new)}}^{\pi}$ is defined as the sum of $D_{\text{fixed}}$ and the $n$-th highest test statistic in $F\setminus S$. If $R$ and $K$ denote the distributions when such statistic is removed and kept, respectively, then
-\begin{align*}
-&R_{L(v)}^{\pi}=D_{\text{fixed}}^{\pi}+D_{c\text{(new)},m-v+1}^{\pi} + A_{L(v)}^{\pi} & K_{L(v)}^{\pi}=D_{\text{fixed(new)}}^{\pi}+A_{L(v)}^{\pi}\\
-&R_{U(v)}^{\pi}=D_{\text{fixed}}^{\pi}+D_{c\text{(new)},v}^{\pi}+A_{U(v)}^{\pi} & K_{U(v)}^{\pi}=D_{\text{fixed(new)}}^{\pi}+A_{U(v)}^{\pi}
-\end{align*}
-where
-\begin{align*}
-& A_{L(v)}^{\pi}=\sum_{j=m-v+2}^{m} D_{c\text{(new)},j}^{\pi} & A_{U(v)}^{\pi}=\sum_{j=1}^{v-1}  D_{c\text{(new)},j}^{\pi}.
-\end{align*}
-
-\begin{lstlisting}
-incr.bab.set <- function(Dfixed, Dfixed.new){
-	z <<- 1 # previous size
-
-	# bounds when removing (R) or keeping (K)
-	Rlow <<- Dfixed
-	Rup <<- Rlow
-	Klow <<- Dfixed.new
-	Kup <<- Klow
-}
-\end{lstlisting}
-
-
-\begin{lstlisting}
-decr.bab.set <- function(Dfixed, Dfixed.new, m, Dc.new){
-	z <<- m
-	Dtot <<- rowSums(Dc.new)
-
-	# bounds when removing (R) or keeping (K)
-	Rlow <- Dfixed + Dtot
-	Rup <- Rlow
-	Klow <- Dfixed.new + Dtot
-	Kup <- Klow
-}
-\end{lstlisting}
-
-\begin{lstlisting}
-incr.bab.loop <- function(z, v, ind.free, Dc.new, m, B){
-	cond <- (v-1 < z)
-	Alow <- IFELSE(cond, rep(0,B),
-	   rowSums(Dc.new[,((m-v+2):(m-z+1)])
-	Rlow <<- Rlow + Dc.new[,m-v+1] + Alow
-	IF NOT(above.quantile(Rlow), alpha){
-		NOT REJECTED
-	}
-
-	Klow <<- Klow + Alow
-	IF NOT(above.quantile(Klow), alpha){
-		NOT REJECTED
-	}
-
-	Aup <- IFELSE(cond, rep(0,B),
-	   rowSums(Dc.new[,(z):(v-1)])
-	Rup <<- Rup + Dc.new[,v] + Aup
-	IF NOT(above.quantile(Rup), alpha){
-		ind.remove <<- c(ind.remove, ind.free[i])
-	}
-
-	Kup <<- Kup + Aup
-	IF NOT(above.quantile(Kup), alpha){
-		ind.keep <<- c(ind.keep, ind.free[i])
-	}
-}
-\end{lstlisting}
-
-\begin{lstlisting}
-decr.bab.loop <- function(z, v, ind.free, Dc.new, m, B){
-	cond <- (v+1 > z)
-	Alow <- IFELSE(cond, rep(0,B),
-	   rowSums(Dc.new[,((m-z+1):(m-v)])
-	Rlow <<- Rlow - Alow
-	IF NOT(above.quantile(Rlow), alpha){
-		NOT REJECTED
-	}
-
-	Klow <<- Klow - Dc.new[,m-v+1] - Alow 
-	IF NOT(above.quantile(Klow), alpha){
-		NOT REJECTED
-	}
-
-	Aup <- IFELSE(cond, rep(0,B),
-	   rowSums(Dc.new[,(v+1):z])
-	Rup <<- Rup - Aup
-	IF NOT(above.quantile(Rup)){
-		ind.remove <<- c(ind.remove, ind.free[i])
-	}
-
-	Kup <<- Kup - Dc.new[,v] - Aup
-	IF NOT(above.quantile(Kup), alpha){
-		ind.keep <<- c(ind.keep, ind.free[i])
-	}
-}
-\end{lstlisting}
-
-
-\begin{lstlisting}
-# tolgo il primo della pila e creo i nodi figli
-# se questi non sono vuoti
-# li aggiungo in cima alla lista
-# (per primo quello remove)
-# itero finche non si svuota oppure trovo
-# un non-reject
-
-children.nodes <- function(n, Dfixed, ind.free, Dc, compl.indices){
-	# the first n highest statistics are removed from Dc
-	Dc.new <- Dc[-el. corresponding to indices in
-	   compl.indices[1:n] in I]
-	Dfixed.new <- Dfixed + Dc[el. corresponding to index
-	   compl.indices[n] in I]
-
-	L <- length(ind.free)
-	i <- 1
-	v <- ind.free[1] # first size	
-	ind.remove <<- c() # indecisive free sizes after removing
-	ind.keep <<- c() # indecisive free sizes after keeping
-
-	IFELSE(incr.order, incr.bab.set(Dfixed, Dfixed.new),
-	   decr.bab.set(Dfixed, Dfixed.new, m, Dc.new))
-
-	WHILE (i <= L){
-		IFELSE(incr.order, incr.bab.loop(z, v, ind.free, Dc.new, m, B),
-		   decr.bab.loop(z, v, ind.free, Dc.new, m, B))
-
-		z <- v
-		i <- i+1
-		v <- indecisive[i]
-	}
-
-	RETURN
-		# n+1, Dfixed, ind.remove
-		#n+1, Dfixed.new, ind.keep
-# vanno aggiunti alla pila se non sono vuoti
-}
-
-
-
-
-# sistemare i return delle funzioni
-# dentro incr.bab.loop
-# e nella funzione principale
-#(si stoppa se non-reject)
-\end{lstlisting}
 
 
 
@@ -347,23 +199,27 @@ The algorithm requires
 
 % ------------------------------------------------------------------------------------%
 
-\vspace{3mm}
-\paragraph{Main Functions}
-The function \texttt{perm.setting} sorts the columns of $T$ in increasing order, and then defines the matrix $D$ of centered test statistics, sorted within each row. Another matrix $I$ keeps track of the original indices: if $D_j^\pi$ corresponds to the individual test statistic on index $i$ in the input matrix, then $I_{\pi j}=i$. This first step will be kept apart from the following functin, so that the matrices $D$ and $I$ can be defined only once even when different subsets $S$ are checked.
+\vspace{5mm}
+\subsection{Main Body}
+\paragraph{Setting of the Input.} The function \texttt{perm.setting} sorts the columns of $T$ in increasing order, and then defines the matrix $D$ of centered test statistics, sorted within each row. Another matrix $I$ keeps track of the original indices: if $D_j^\pi$ corresponds to the individual test statistic on index $i$ in the input matrix, then $I_{\pi j}=i$. This first step will be kept apart from the following function, so that the matrices $D$ and $I$ can be defined only once even when different subsets $S$ are checked.
+
 \begin{lstlisting}
+# Setting of the input
+# It returns the matrix D of the centered statistics (ordered within
+# each row), and the matrix I of the indices
 perm.setting <- function(T){
 	IF NOT(check.matrix(T)){
 		STOP with error message
 	}
 	
-	i.vec <- (1,...,f)
+	i.vec <- c(1,...,f)
 	T <- T[columns sorted so that T[1,] is in incr. order]
 	i.vec <- i.vec[reordered as T[1,]]
 	# note: the columns can be sorted with other criteria
 
 	I <- matrix(B rows, each equal to i.vec)
 	D <- T[each column is centered with respect to its first el.]
-	D <- D[are sorted in incr. order within each row
+	D <- D[el. are sorted in incr. order within each row
 	   except the first]
 	I <- I[reordered as D]
 	# B times f matrices
@@ -377,16 +233,15 @@ perm.setting <- function(T){
 
 
 \vspace{3mm}
-The function \texttt{perm.test} checks the null hypothesis on the set of indices $S$. The inner functions are displayed in the following section.
-
-\textbf{Check the link in the comment. Now I need to implement the tree structure and the BAB.}
+\paragraph{Main Function for Hypothesis Testing.} The function \texttt{perm.test} checks the null hypothesis on the set of indices $S$. The inner functions are displayed in the following section.
+%\textbf{Check the link in the comment. Now I need to implement the tree structure and the BAB.}
 % https://www.geeksforgeeks.org/inorder-tree-traversal-without-recursion/
 
-
-
-
 \begin{lstlisting}
-perm.test(D, I, S, alpha){
+# Hypothesis testing on S
+# It returns rejected = TRUE if Hs is rejected
+# as well as the number of steps used in the step-by-step method
+perm.test(D, I, S, alpha=0.05){
 	IF NOT(check.matrix(D) AND check.matrix(I)){
 		STOP with error message
 	}
@@ -414,62 +269,50 @@ perm.test(D, I, S, alpha){
 		RETURN list("rejected"=rej, "bab.steps"=0)
 	}
 
+	# output in case of non-rejection
+	nr.output <- list("rejected"=FALSE, "bab.steps"=0)
 
 	Ds <- D[elements corresponding in I to indices in S]
 	# D_j^pi is removed if I[pi,j] is in S
 	Ds <- rowSums(Ds) # vector of length B
 	
-	Dfull <- rowSums(D)
-	# sum of all test statistics
+	Dfull <- rowSums(D) # sum of all test statistics
 
 	# v=0 and v=m
 	extremes <- extremes.check(Ds, Dfull, alpha)
 	IF NOT(extremes){
-		RETURN list("rejected"=FALSE, "bab.steps"=0)
+		RETURN nr.output
 	}
 
 	compl.indices <- I[1,][- indices in S]
-	# indices not in S in order
+	# indices not in S, in order
 	Dc <- D[-elements corresponding in I to indices in S]
 	# B times m matrix
 
 	middle <- IFELSE(incr.order, incr.check(Ds, Dc, m, alpha),
 	   decr.check(Dfull, Dc, m, alpha))
 	IF NOT(middle){
-		RETURN list("rejected"=FALSE, "bab.steps"=0)
+		RETURN nr.output
 	}
 
-%%%
 
-	
 	# STEP-BY-STEP METHOD
+	
+	rej <- TRUE
+	bab.s <- 0 # number of steps
 
-	n <- 1
-	A <- c()
-	list.of.ind <- list(list("sel"=c(), "indecisive"=indecisive))
+	list.ind <<- list(indecisive) # indecisive sizes ind.free
+	list.level <<- list(0) # numbers n of considered indices
+	list.fixed <<- list(Ds) # fixed quantities Dfixed
 
-	WHILE (length(list.of.ind) > 0){
-		A <- cbind(A, D[el. corresponding to index (m-n) in I])
-		D <- D[- el. corresponding to index (m-n) in I]
-		I <- D[- el. equal to (m-n)]
-		
-		temp <- list.of.ind
-		
-		FOR (e IN list.of.ind){
-			# function defined in the following paragraph:
-			bab <- bab.step(n, e$sel, e$indecisive)
-			IF (bab$not.rejected){
-				RETURN list("out"="not rejected",
-				   "bab.steps"=n)
-			}
-		}
-
-		list.of.ind <- temp
-		n <- n+1
+	WHILE (rej == TRUE AND length(list.ind) > 0){
+		rej <- children.nodes(n=list.level[1],
+		   Dfixed=list.fixed[1], ind.free=list.ind[1],
+		   Dc, compl.indices, m, B, alpha)
+		bab.s <- bab.s+1
 	}
 
-	# if the list of indecisive sizes for all branches is null:
-	RETURN list("out"="rejected", "bab.steps"=n-1)
+	RETURN list("rejected"=rej, "bab.steps"=bab.s)
 }
 \end{lstlisting}
 
@@ -477,8 +320,8 @@ perm.test(D, I, S, alpha){
 % ------------------------------------------------------------------------------------%
 
 \vspace{3mm}
-\paragraph{Internal Functions}
-The following functions are used to check the inputs and some conditions.
+\paragraph{Condition Check.} The following internal functions are used to check the input and some conditions.
+
 \begin{lstlisting}
 # TRUE if an object M is a matrix of finite numbers
 check.matrix <- function(M){
@@ -520,16 +363,16 @@ above.quantile <- function(X, alpha){
 
 
 \vspace{3mm}
-The following functions check different superset sizes. In particular, \texttt{incr.check} and \texttt{decr.check} exploit the fact that
+\paragraph{Check of Superset Sizes.} The following functions check different superset sizes. In particular, \texttt{incr.check} and \texttt{decr.check} exploit the fact that
 \begin{align*}
 &D_{L(v)}=D_{L(v-1)}+D_{m-v+1} & D_{U(v)}=D_{U(v-1)}+D_{v}\\
 &D_{L(v)}=D_{L(v+1)}-D_{m-v} & D_{U(v)}=D_{U(v+1)}-D_{v+1}.
 \end{align*}
 
 \begin{lstlisting}
-# check of the cases v=0 and v=m
+# Check of the cases v=0 and v=m
 # FALSE in case of a non-rejection, TRUE otherwise
-# it creates incr.order, TRUE if the order to be used for the middle
+# It creates incr.order, TRUE if the order to be used for the middle
 # sizes is increasing
 extremes.check <- function(Ds, Dfull, alpha)
 	# v=0
@@ -552,10 +395,9 @@ extremes.check <- function(Ds, Dfull, alpha)
 }\end{lstlisting}
 
 \begin{lstlisting}
-# check of sizes v=1,...,m-1
-# in increasing order
+# Check of sizes v=1,...,m-1 in increasing order
 # FALSE in case of a non-rejection, TRUE otherwise
-# it creates the vector of indecisive sizes
+# It creates the vector of indecisive sizes
 incr.check <- function(Ds, Dc, m, alpha){
 	v <- 1
 	Dlow <- Ds
@@ -582,10 +424,9 @@ incr.check <- function(Ds, Dc, m, alpha){
 \end{lstlisting}
 
 \begin{lstlisting}
-# check of sizes v=m-1,...,1
-# in decreasing order
+# Check of sizes v=m-1,...,1 in decreasing order
 # FALSE in case of a non-rejection, TRUE otherwise
-# it creates the vector of indecisive sizes
+# It creates the vector of indecisive sizes
 decr.check <- function(Dfull, Dc, m, alpha){
 	v <- m-1
 	Dlow <- Dfull
@@ -612,257 +453,244 @@ decr.check <- function(Dfull, Dc, m, alpha){
 \end{lstlisting}
 
 
+% ------------------------------------------------------------------------------------%
 
-\newpage
-\section{Pseudo Code}
-The algorithm requires:
+\vspace{5mm}
+\subsection{Step-by-Step Method}
+
+\paragraph{Enumeration of Subcases.} In the list of subcases to be examined, each element is characterized by
 \begin{itemize}
-\item the matrix $T$ having in each row the individual test statistics corresponding to a permutation (the first row corresponds to the identity)
-\begin{align*}
-T=
-\begin{pmatrix}
-T_1 & \ldots & T_f\\
-T_1^2 & \ldots & T_f^2\\
-\vdots &  & \vdots\\
-T_1^B & \ldots & T_f^B
-\end{pmatrix}
-\end{align*}
-\item a subset $S$ of indices under test;
-\item a significance level $\alpha$ (by default 0.05).
+\item $n$, the total number of indices $i_1,\ldots,i_n$ that have been considered (removed or kept);
+\item $D_{\text{fixed}}$, the sum of $D_S$ and the test statistics that have been kept;
+\item $ind.free$, the vector of the indecisive sizes minus the number of kept statistics.
 \end{itemize}
 
-\vspace{3mm}
-\noindent
-$T$ is checked and the matrix $D$ of centered statistics is defined. The first row of $D$ is deleted, since it is always null (but the value 0 will be added again when computing the sample quantiles). This function will be kept separated, so that the matrix $D$ can be defined only once even when different subsets $S$ are checked.
+At every step, the function \texttt{children.nodes} is used to delete the first element and add its two subcases derived by removing and keeping $i_n$, if they correspond to at least one indecisive size. Let $R$ and $K$ denote the distributions of the bounds when $i_n$ is removed and kept, respectively.
+
+The statistics corresponding to indices $i_1,\ldots,i_{n}$ are removed from $D_c$ to define $\tilde{D}_c$. Moreover, $\tilde{D}_{\text{fixed}}^{\pi}$ is defined as the sum of $D_{\text{fixed}}^{\pi}$ and the centered statistic corresponding to $i_n$. The indecisive sizes are explored following the previously-defined order.
+
 \begin{lstlisting}
-perm.setting <- function(T){
-	IF NOT(T is a matrix of finite numbers){
-		STOP with error message
-	}
+# Analysis of the subcases obtained by removing/keeping i_n
+# FALSE in case of a non-rejection, TRUE otherwise
 
-	D <- T[columns sorted so that T[1,] is in incr. order]
-	# note: the columns can be sorted with other criteria
-	D <- D[each column is centered with respect to its first el.]
-	D <- D[-1,] # as the first column is null
-	RETURN D
-}
+children.nodes <- function(n, Dfixed, ind.free, Dc, compl.indices,
+   m, B, alpha){
+	delete.list() # the first element is removed from the list
 
+	# the first n highest statistics are removed from Dc
+	Dc.tilde <- Dc[-el. corresponding to indices in
+	   compl.indices[1:n] in I]
+	Dfixed.tilde <- Dfixed + Dc[el. corresponding to index
+	   compl.indices[n] in I]
+	m.tilde <- m - n # dim. of Dc.tilde
 
-# function that returns TRUE if zero is smaller than
-# the sample quantile of a vector c(0,X)
-under.quantile <- function(X, alpha){
-	c <- quantile(c(0,X), (1-alpha))
-	out <- (0 <= c)
-	RETURN out
-}
-\end{lstlisting}
+	L <- length(ind.free)
+	i <- 1
+	ind.remove <<- c() # indecisive free sizes after removing
+	ind.keep <<- c() # indecisive free sizes after keeping
 
-\vspace{3mm}
-\noindent
-$S$ and $\alpha$ are checked. Then
-\begin{align*}
-&Ds =
-\begin{pmatrix}
-D_S^2\\
-\vdots\\
-D_S^B
-\end{pmatrix}
-&D =
-\begin{pmatrix}
-D_{S^c,\,(1)}^{2} & \ldots & D_{S^c,\,(m)}^{2}\\
-\vdots &  & \vdots\\
-D_{S^c,\,(1)}^{B} & \ldots & D_{S^c,\,(m)}^{B}
-\end{pmatrix}
-\end{align*}
-where $m=f-s$. The matrix $I$ keeps track of the indices of $D$ before the reordering:
-\[I_{\pi j}=i\quad\Longleftrightarrow\quad D_{S^c,\,(j)}^{\pi}=D_{S^c,\,i}^{\pi}.\]
-
-Let $z=v-s\in\{0,\ldots,m\}$. Both for $z=0$ and $z=m$ (i.e. $v=s$ and $v=f$),
-\[D_{L(v)}^{\pi}=D_{U(v)}^{\pi}=D_V^{\pi}.\]
-The check on different $z$ starts with $z=0$; in the particular case of $m=0$ (i.e. $s=f$), the algorithm stops.
-
-For the following values of $z$, the lower and upper bounds are updated by adding the elements of columns $z$ and $m-z+1$, respectively:
-\begin{align*}
-& D_{L(v)}=Ds+\sum_{j=1}^{z} D_j & D_{U(v)}=Ds+\sum_{j=m-z+1}^{m} D_j\\
-& D_{L(v+1)}=D_{L(v)}+D_{z+1} & D_{U(v+1)}=D_{U(v)}+D_{m-(z+1)+1}.
-\end{align*}
-The vector $indecisive$ keeps track of the sizes to be checked later with the step-by-step method, if needed. If there are no indecisive values, the null hypothesis is rejected.
-\begin{lstlisting}
-# D is the matrix of centered test statistics
-perm.check(S, D, alpha){
-	IF NOT(0 < alpha < 1){
-		STOP with error message
-	}
-
-	IF NOT(S is a numerical vector){
-		STOP with error message
-	}
-	
-	B <- nrow(D)
-	f <- ncol(D)
-	S <- unique(S)
-	s <- length(S)
-	m <- f-s
-
-	IF NOT(the el. of S are integers between 1 and f){
-		STOP with error message
-	}
-
-
-	# s=f:
-	IF (m == 0){
-		Ds <- rowSums(D)
+	IF (incr.order){
+		incr.bab.set(Dfixed, Dfixed.tilde)
+		WHILE (i <= L){
+			v <- ind.free[i]
+			current.step <- incr.bab.loop(z, v, Dc.tilde,
+			   m.tilde, B, alpha)
+			# stop if one non-rejection is found
+			IF NOT(current.step){
+				RETURN FALSE
+			}
+			z <- v
+			i <- i+1
+			
+		}
 	}
 	ELSE{
-		Ds <- rowSums(D[,S])
-		D <- D[,-S]
-		I <- matrix((B-1) rows, each equal to 1,...,m)
-
-		D <- D[within each row el. are sorted in incr. order]
-		I <- I[reordered as D]
-	}
-
-
-	# z=v-s, from 0 to m
-	# first check z=0 (v=s):
-	IF (under.quantile(Ds, alpha)){
-		RETURN list("out"="not rejected", "bab.steps"=0)
-	}
-
-	IF (m == 0){
-		RETURN list("out"=not rejected, "bab.steps"=0)
-	}
-
-
-	# then check z=1,...,m-1:
-	indecisive <- c()
-	z <- 1
-
-	WHILE (z < m){
-		Dlow <- Ds + D[,z]
-		IF (under.quantile(Dlow, alpha)){
-			RETURN list("out"="not rejected",
-			   "bab.steps"=0) # break
-		}
-
-		Dup <- Ds + D[,m-z+1]
-		IF (under.quantile(Dup, alpha)){
-			indecisive <- c(indecisive, z)
-		}
-	
-		z <- z+1
-	}
-
-
-	# finally check z=m (v=f):
-	# now Dlow = Dup = D
-	IF (under.quantile(Dlow, alpha)){
-		RETURN list("out"="not rejected", "bab.steps"=0)
-	}
-
-
-	IF (indecisive is null){
-		RETURN list("out"="rejected", "bab.steps"=0)
-	}
-
-	
-	# STEP-BY-STEP METHOD
-
-	n <- 1
-	A <- c()
-	list.of.ind <- list(list("sel"=c(), "indecisive"=indecisive))
-
-	WHILE (length(list.of.ind) > 0){
-		A <- cbind(A, D[el. corresponding to index (m-n) in I])
-		D <- D[- el. corresponding to index (m-n) in I]
-		I <- D[- el. equal to (m-n)]
-		
-		temp <- list.of.ind
-		
-		FOR (e IN list.of.ind){
-			# function defined in the following paragraph:
-			bab <- bab.step(n, e$sel, e$indecisive)
-			IF (bab$not.rejected){
-				RETURN list("out"="not rejected",
-				   "bab.steps"=n)
+		decr.bab.set(Dfixed, Dfixed.tilde)
+		WHILE (i <= L){
+			v <- ind.free[i]
+			current.step <- decr.bab.loop(z, v, Dc.tilde,
+			   m.tilde, B, alpha)
+			# stop if one non-rejection is found
+			IF NOT(current.step){
+				RETURN FALSE
 			}
+			z <- v
+			i <- i+1
 		}
-
-		list.of.ind <- temp
-		n <- n+1
 	}
 
-	# if the list of indecisive sizes for all branches is null:
-	RETURN list("out"="rejected", "bab.steps"=n-1)
+	add.list(ind.keep, n+1, Dfixed.tilde)
+	add.list(ind.remove, n+1, Dfixed)
+
+	RETURN TRUE
 }
 \end{lstlisting}
+
+
+% ------------------------------------------------------------------------------------%
+
 
 \vspace{3mm}
-\noindent
-The step by step method checks the sizes $z\in\{1,\ldots,m-1\}$ that are indecisive. The elements corresponding to the highest statistic $T_{m}$ are separated from $D$ and stored in the vector $A_1$.
+\paragraph{Operations on the List.} The following internal functions are used to delete or add elements from the list of cases to be examined.
 
-Let $R_{L(v)}^{\pi}$ and $R_{U(v)}^{\pi}$ be the bounds for $\mathcal{V}_1$ (when $T_{m}$ is removed), and $K_{L(v)}^{\pi}$ and $K_{U(v)}^{\pi}$ the bounds for $\mathcal{V}_2$ (when $T_{m}$ is kept):
-\begin{align*}
-& R_{L(v)}^{\pi}=Ds^{\pi}+\sum_{j=1}^{z} D_j^{\pi} & K_{L(v)}^{\pi}=Ds^{\pi}+A_1^{\pi}+\sum_{j=1}^{z-1} D_j^{\pi}=R_{L(v)}^{\pi} - D_z^{\pi} + A_1^{\pi}\\
-& R_{U(v)}^{\pi}=Ds^{\pi}+\sum_{j=m-z+1}^{m} D_j^{\pi} & K_{U(v)}^{\pi}=Ds^{\pi}+A_1^{\pi}+\sum_{j=m-z+2}^{m} D_j^{\pi}=R_{U(v)}^{\pi} - D_{m-z+1}^{\pi} + A_1^{\pi}\\
-\end{align*}
-
-As long as there are non-null sets of indecisive sizes, such procedure is iterated.
-
-Before step $n$, the columns of a matrix $A$ keep track of the elements that have already been separated from $D$ (those corresponding to $T_{m},\ldots T_{m-n-1}$). There are at most $2^{n-1}$ vectors of indecisive sizes, each corresponding to a subset where only some columns of $A$ (identified by a vector $sel$ of indices) were kept.
-
-At step $n$, the elements corresponding to $T_{m-n}$ are separated from $D$ and stored as the $n$-th column of $A$. For each couple ($indecisive$, $set$), the subsets where $T_{m-n}$ is removed or kept are analyzed:
-\begin{align*}
-& R_{L(v)}^{\pi}=Ds^{\pi}+\sum_{a\in sel}A_a^{\pi}+\sum_{j=1}^{z-|sel|} D_j^{\pi} & K_{L(v)}^{\pi}=R_{L(v)}^{\pi} - D_z^{\pi} + A_n^{\pi}\\
-& R_{U(v)}^{\pi}=Ds^{\pi}+\sum_{a\in sel}A_a^{\pi}+\sum_{j=m-z+1+|sel|}^{m} D_j^{\pi} & K_{U(v)}^{\pi}=R_{U(v)}^{\pi} - D_{m-z+1}^{\pi} + A_n^{\pi}\\
-\end{align*}
 \begin{lstlisting}
-bab.step <- function(n, sel, indecisive){
-	ind.remove <- c() # indecisive sizes after removing
-	ind.keep <- c() # indecisive sizes after keeping
-
-	z.prev <- 0
-	i <- 1
-	n.sel <- length(sel)
-	z <- indecisive[i] - n.sel
-
-	Rlow <- Ds + rowSums(A[sel])
-	Rup <- Rlow
-
-	WHILE (i <= length(indecisive)){
-		Rlow <- Rlow + rowSums(D[,((z.prev+1):z)])
-		IF (under.quantile(Rlow, alpha)){
-			RETURN list("not.rejected"=TRUE,
-			   "ind.remove"=c(), "ind.keep"=c())
-		}
-
-		Klow <- Rlow + A[n] - D[,z]
-		IF (under.quantile(Klow, alpha)){
-			RETURN list("not.rejected"=TRUE,
-			   "ind.remove"=c(), "ind.keep"=c())
-		}
-
-		Rup <- Rup + rowSums(D[,((m-z+1):(m-z.prev)])
-		IF (under.quantile(Rup, alpha)){
-			ind.remove <- c(ind.remove, indecisive[i])
-		}
-
-		Kup <- Rup + A[n] - D[,m-z+1]
-		IF (under.quantile(Kup, alpha)){
-			ind.keep <- c(ind.keep, indecisive[i])
-		}
-
-		z.prev <- z
-		i <- i+1
-		z <- indecisive[i] - n.sel
-	}
-
-	RETURN list("not.rejected"=FALSE, "ind.remove"=ind.remove,
-	   "ind.keep"=ind.keep)
+# It removes the first element of the lists
+# list.ind, list.level and list.fixed
+delete.list <- function(){
+	list.ind <<- list.ind[-1]
+	list.level <<- list.level[-1]
+	list.fixed <<- list.fixed[-1]
 }
 \end{lstlisting}
 
-A
+\begin{lstlisting}
+# If a vector X is non-empty
+# it is added to the list list.ind
+# and the quantities lev and fixed are added to the lists
+# list.level and list.fixed, respectively
+add.list <- function(X, lev, fixed){
+	IF (length(X) > 0){
+		list.ind <<- c(X, list.ind)
+		list.level <<- c(lev, list.level)
+		list.fixed <<- c(fixed, list.fixed)
+	}
+}
+\end{lstlisting}
+
+
+% ------------------------------------------------------------------------------------%
+
+
+\vspace{3mm}
+\paragraph{Check in Increasing Order.} The following functions are used to check sizes in increasing order, using the fact that
+\begin{align*}
+&R_{L(v)}^{\pi}=D_{\text{fixed}}^{\pi}+\tilde{D}_{c,m-n-v+1}^{\pi} + A_{L(v)}^{\pi} & K_{L(v)}^{\pi}=\tilde{D}_{\text{fixed}}^{\pi}+A_{L(v)}^{\pi}\\
+&R_{U(v)}^{\pi}=D_{\text{fixed}}^{\pi}+\tilde{D}_{c,v}^{\pi}+A_{U(v)}^{\pi} & K_{U(v)}^{\pi}=\tilde{D}_{\text{fixed}}^{\pi}+A_{U(v)}^{\pi}
+\end{align*}
+where
+\begin{align*}
+& A_{L(v)}^{\pi}=\sum_{j=m-n-v+2}^{m-n} \tilde{D}_{c,j}^{\pi} & A_{U(v)}^{\pi}=\sum_{j=1}^{v-1}  \tilde{D}_{c,j}^{\pi}.
+\end{align*}
+
+\begin{lstlisting}
+# Initialization of the loop for the increasing case
+incr.bab.set <- function(Dfixed, Dfixed.tilde){
+	z <<- 1 # previous size
+
+	# bounds when removing (R) or keeping (K)
+	Rlow <<- Dfixed
+	Rup <<- Rlow
+	Klow <<- Dfixed.tilde
+	Kup <<- Klow
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+# Check of a given size v
+# when sizes are explored in increasing order
+# FALSE in case of a non-rejection, TRUE otherwise
+# It updates the vectors of indecisive sizes
+incr.bab.loop <- function(z, v, Dc.tilde, m.tilde, B, alpha){
+	cond <- (v == 1) # if v=1, then v-1 < z
+	Alow <- IFELSE(cond, rep(0,B),
+	   rowSums(Dc.tilde[,((m.tilde-v+2):(m.tilde-z+1)])
+	Rlow <<- Rlow + Dc.tilde[,m.tilde-v+1] + Alow
+	IF NOT(above.quantile(Rlow), alpha){
+		RETURN FALSE
+	}
+
+	Klow <<- Klow + Alow
+	IF NOT(above.quantile(Klow), alpha){
+		RETURN FALSE
+	}
+
+	Aup <- IFELSE(cond, rep(0,B),
+	   rowSums(Dc.tilde[,z:(v-1)])
+	Rup <<- Rup + Dc.tilde[,v] + Aup
+	IF NOT(above.quantile(Rup), alpha){
+		ind.remove <<- c(ind.remove, v)
+	}
+
+	Kup <<- Kup + Aup
+	IF NOT(above.quantile(Kup), alpha){
+		ind.keep <<- c(ind.keep, v-1)
+	}
+	RETURN TRUE
+}
+\end{lstlisting}
+
+
+% ------------------------------------------------------------------------------------%
+
+
+\vspace{3mm}
+\paragraph{Check in Decreasing Order.} The following functions are used to check sizes in decreasing order, using the fact that
+\begin{align*}
+&R_{L(v)}^{\pi}=D_{\text{fixed}}^{\pi}+\sum_{j=1}^{m-n}\tilde{D}_{c,j}^{\pi} - A_{L(v)}^{\pi} & K_{L(v)}^{\pi}=\tilde{D}_{\text{fixed}}^{\pi}+\sum_{j=1}^{m-n}\tilde{D}_{c,j}^{\pi} - \tilde{D}_{c,m-n-v+1}^{\pi} - A_{L(v)}^{\pi}\\
+&R_{U(v)}^{\pi}=D_{\text{fixed}}^{\pi}+\sum_{j=1}^{m-n}\tilde{D}_{c,j}^{\pi} -A_{U(v)}^{\pi} & K_{U(v)}^{\pi}=\tilde{D}_{\text{fixed}}^{\pi}+\sum_{j=1}^{m-n}\tilde{D}_{c,j}^{\pi} - \tilde{D}_{c,v}^{\pi} - A_{L(v)}^{\pi}
+\end{align*}
+where
+\begin{align*}
+& A_{L(v)}^{\pi}=\sum_{j=1}^{m-n-v} \tilde{D}_{c,j}^{\pi} & A_{U(v)}^{\pi}=\sum_{j=v+1}^{m-n}  \tilde{D}_{c,j}^{\pi}.
+\end{align*}
+
+\begin{lstlisting}
+# Initialization of the loop for the decreasing case
+decr.bab.set <- function(Dfixed, Dfixed.tilde, Dc.tilde, m.tilde){
+	z <<- m.tilde # previous size
+	Dtot <<- rowSums(Dc.tilde)
+
+	# bounds when removing (R) or keeping (K)
+	Rlow <<- Dfixed + Dtot
+	Rup <<- Rlow
+	Klow <<- Dfixed.tilde + Dtot
+	Kup <<- Klow
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+# Check of a given size v
+# when sizes are explored in decreasing order
+# FALSE in case of a non-rejection, TRUE otherwise
+# It updates the vectors of indecisive sizes
+decr.bab.loop <- function(z, v, Dc.tilde, m.tilde, B, alpha){
+	cond <- (v == m.tilde) # if v=m.tilde, then v+1 > z
+	Alow <- IFELSE(cond, rep(0,B),
+	   rowSums(Dc.tilde[,((m.tilde-z+1):(m.tilde-v)])
+	Rlow <<- Rlow - Alow
+	IF NOT(above.quantile(Rlow), alpha){
+		RETURN FALSE
+	}
+
+	Klow <<- Klow - Dc.tilde[,m.tilde-v+1] - Alow 
+	IF NOT(above.quantile(Klow), alpha){
+		RETURN FALSE
+	}
+
+	Aup <- IFELSE(cond, rep(0,B),
+	   rowSums(Dc.tilde[,(v+1):z])
+	Rup <<- Rup - Aup
+	IF NOT(above.quantile(Rup)){
+		ind.remove <<- c(ind.remove, v)
+	}
+
+	Kup <<- Kup - Dc.tilde[,v] - Aup
+	IF NOT(above.quantile(Kup), alpha){
+		ind.keep <<- c(ind.keep, v-1)
+	}
+	RETURN TRUE
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
 
 
 
