@@ -14,12 +14,12 @@ check_indices(x, R, C)
 \item{C}{number of columns}
 }
 \value{
-The function returns \code{TRUE} if \code{x} is a matrix with \code{R} rows
+The function returns \code{TRUE} if \code{x} has \code{R} rows
 and \code{C} columns, and each row contains an unordered sequence of
 integers from 1 to \code{C}.
 }
 \description{
-Internal function. It checks whether an object is a well-defined
+Internal function. It checks whether a matrix is a well-defined
 matrix of indices with given dimensions.
 }
 \examples{

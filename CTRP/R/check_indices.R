@@ -1,13 +1,13 @@
 #' @title Condition check: matrix of indices
 #'
-#' @description Internal function. It checks whether an object is a well-defined
+#' @description Internal function. It checks whether a matrix is a well-defined
 #' matrix of indices with given dimensions.
 #'
 #' @param x matrix of finite numbers
 #' @param R number of rows
 #' @param C number of columns
 #'
-#' @return The function returns \code{TRUE} if \code{x} is a matrix with \code{R} rows
+#' @return The function returns \code{TRUE} if \code{x} has \code{R} rows
 #' and \code{C} columns, and each row contains an unordered sequence of
 #' integers from 1 to \code{C}.
 #'

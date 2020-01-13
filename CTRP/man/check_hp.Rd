@@ -23,6 +23,7 @@ vector of indices to be tested.
 S <- c(5, 7, 1, 9)
 check_hp(S, 20)
 check_hp(S, 8)
+
 S <- c(1.5, 7, 1, 9)
 check_hp(S, 20)
 }
