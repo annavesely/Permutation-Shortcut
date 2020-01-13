@@ -28,8 +28,3 @@ above_quantile <- function(x, alpha=0.05){
   out <- sign(c)==-1
   return(out)
 }
-
-
-
-# TRUE if zero is greater than the sample quantile of a vector X
-
