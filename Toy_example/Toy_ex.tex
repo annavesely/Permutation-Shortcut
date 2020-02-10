@@ -55,7 +55,7 @@
 \maketitle
 
 
-\paragraph{Data.} We simulate a covariate matrix $\mathbf{X}$ having $n=20$ observations of $f=5$ variables from a standard normal distribution. Then we simulate a response variable $\mathbf{y}=(y_1,\ldots,y_n)^\top$ according to the logistic regression model
+\section{Data.} We simulate a covariate matrix $\mathbf{X}$ having $n=20$ observations of $f=5$ variables from a standard normal distribution. Then we simulate a response variable $\mathbf{y}=(y_1,\ldots,y_n)^\top$ according to the logistic regression model
 \begin{align*}
 y_j\sim\text{Ber}(p_j),\quad\quad\text{logit}(p_j)=\beta_0+\mathbf{X}_j\boldsymbol{\beta}\quad\quad(j=1,\ldots,n)
 \end{align*}
@@ -70,68 +70,90 @@ as well as the centered test statistics
 d_i^\pi=g_i^\pi - g_i\quad\quad(i=1,\ldots,f,\quad \pi=1,\ldots,B).
 \end{align*}
 
+We define the matrix $M$ of the individual centered test statistics $d_i^\pi$, where the rows are sorted so that the observed values $g_i$ are in increasing order, as well as the matrix $D$, obtained by sorting the elements of $M$ within each row in descending order:
+\begin{table}[h!]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{ccccccccccc}
+\multicolumn{5}{c}{$\mathbf{M}$} & & \multicolumn{5}{c}{$\mathbf{D}$}\\
+$d_5$ & $d_2$ & $d_3$ & $d_4$ & $d_1$ &  &  &  &  &  &  \\
+\cline{1-5} \cline{7-11}
+0.00 & 0.00 & 0.00 & 0.00 & 0.00 &  & 0.00 (1)& 0.00 (4)& 0.00 (3)& 0.00 (2)& 0.00 (5)\\
+-6.03 & -7.99 & -8.84 & -16.62 & -28.32 &  & -6.03 (5)& -7.99 (2)& -8.84 (3)& -16.62 (4)& -28.32 (1)\\
+-5.29 & -5.02 & -9.04 & -13.61 & -27.72 &  & -5.02 (2)& -5.29 (5)& -9.04 (3)& -13.61 (4)& -27.72 (1)\\
+2.43 & -8.25 & -9.14 & 13.63 & -27.34 &  & 13.63 (4)& 2.43 (5)& -8.25 (2)& -9.14 (3)& -27.34 (1)\\
+-5.63 & -6.49 & -8.38 & -9.23 & -28.19 &  & -5.63 (5)& -6.49 (2)& -8.38 (3)& -9.23 (4)& -28.19 (1)\\
+-6.08 & -6.51 & -9.38 & -16.64 & -26.59 &  & -6.08 (5)& -6.51 (2)& -9.38 (3)& -16.64 (4)& -26.59 (1)\\
+-4.59 & -3.36 & -8.34 & -14.86 & -10.74 &  & -3.36 (2)& -4.59 (5)& -8.34 (3)& -10.74 (1)& -14.86 (4)\\
+-5.85 & -9.07 & -5.33 & 9.44 & -26.65 &  & 9.44 (4)& -5.33 (3)& -5.85 (5)& -9.07 (2)& -26.65 (1)\\
+-0.28 & -0.89 & -4.98 & -16.31 & -25.71 &  & -0.28 (5)& -0.89 (2)& -4.98 (3)& -16.31 (4)& -25.71 (1)\\
+2.72 & 14.70 & -6.99 & -16.65 & -27.27 &  & 14.70 (2)& 2.72 (5)& -6.99 (3)& -16.65 (4) & -27.27 (1)
+\end{tabular}
+}
+\end{table}
 
-\vspace{5mm}
-\paragraph{Analysis.} Assume that we want to test $S=\{3\}$. Then the subsets that need to be tested are the following:
+
+
+\newpage
+\section{Test.} Assume that we want to test $S=\{3\}$. Then the subsets that need to be tested are the following:
 
 \begin{table}[h!]
 \centering
 \resizebox{\textwidth}{!}{
 \begin{tabular}{c|ccccccccccc}
-|S|+4 &  &  &  &  &  & $\mathbf{F=\{1,2,3,4,5\}}$ &  &  &  &  &  \\
-|S|+3 &  &  & $\{1,2,3,4\}$ &  & $\{1,2,3,5\}$ &  & $\{1,3,4,5\}$ &  & $\mathbf{\{2,3,4,5\}}$ &  &  \\
-|S|+2 & $\{1,2,3\}$  &  & $\{1,3,4\}$ &  & $\{1,3,5\}$ &  & $\{2,3,4\}$ &  & $\mathbf{\{2,3,5\}}$ &  & $\{3,4,5\}$ \\
-|S|+1 &  &  & $\{1,3\}$ &  & $\{2,3\}$ &  & $\{3,4\}$ &  & $\mathbf{\{3,5\}}$ &  &  \\
-|S| &  &  &  &  &  & $\mathbf{S=\{3\}}$ &  &  &  &  &  
+size &   &  &  &  &  &  &  &  &  &  &  \\
+5 &  &  &  &  &  & $\mathbf{F=\{1,2,3,4,5\}}$ &  &  &  &  &  \\
+4 &  &  & $\{1,2,3,4\}$ &  & $\{1,2,3,5\}$ &  & $\{1,3,4,5\}$ &  & $\mathbf{\{2,3,4,5\}}$ &  &  \\
+3 & $\{1,2,3\}$  &  & $\{1,3,4\}$ &  & $\{1,3,5\}$ &  & $\{2,3,4\}$ &  & $\mathbf{\{2,3,5\}}$ &  & $\{3,4,5\}$ \\
+2 &  &  & $\{1,3\}$ &  & $\{2,3\}$ &  & $\{3,4\}$ &  & $\mathbf{\{3,5\}}$ &  &  \\
+1 &  &  &  &  &  & $\mathbf{S=\{3\}}$ &  &  &  &  &  
 \end{tabular}
 }
 \end{table}
 
-We define the following quantities:
-\begin{itemize}
-\item $M_S$, vector of the centered test statistics $d_S^\pi$ ($\pi=1,\ldots,B$);
-\item $M$, matrix of the individual centered test statistics $d_i^\pi$ corresponding to the indices in $F\setminus S$. The rows are sorted so that the observed values are in descending order;
-\item $D$, matrix obtained by sorting the elements of $M$ within each row in descending order;
-\item $I$, matrix of indices such that $I_{\pi h}=i$ if the element $D_{\pi h}$ corresponds to predictor $i$.
-\end{itemize}
-
-
-\newpage
+We define the matrices $\tilde{M}$ and $\tilde{D}$ by moving the elements corresponding to $S$ to the first column of $M$ and $D$:
 \begin{table}[h!]
 \centering
 \resizebox{\textwidth}{!}{
-\begin{tabular}{cccccccccccccccc}
-$\mathbf{M_S}$ & & \multicolumn{4}{c}{$\mathbf{M}$} & & \multicolumn{4}{c}{$\mathbf{D}$} & & \multicolumn{4}{c}{$\mathbf{I}$}\\
-$d_2$ & & $d_1$ & $d_4$ & $d_2$ & $d_5$ &  &  &  &  &  &  &  &  &  &  \\
-\cline{1-1} \cline{3-6} \cline{8-11} \cline{13-16}
-0.00  &  & 0.00 & 0.00 & 0.00 & 0.00 &  & 0.00 & 0.00 & 0.00 & 0.00 &  & 1 & 4 & 2 & 5 \\
--8.84 &  &  -28.32 & -16.62 & -7.99 & -6.03 &  & -6.03 & -7.99 & -16.62 & -28.32 &  & 5 & 2 & 4 & 1\\
--9.04 &  & -27.72 & -13.61 & -5.02 & -5.29 &  & -5.02 & -5.29 & -13.61 & -27.72 &  & 2 & 5 & 4 & 1\\
--9.14 &  & -27.34 & 13.63 & -8.25 & 2.43 &  & 13.63 & 2.43 & -8.25 & -27.34 &  & 4 & 5 & 2 & 1\\
--8.38 &  & -28.19 & -9.23 & -6.49 & -5.63 &  & -5.63 & -6.49 & -9.23 & -28.19 &  & 5 & 2 & 4 & 1\\
--9.38 &  & -26.59 & -16.64 & -6.51 & -6.08 &  & -6.08 & -6.51 & -16.64 & -26.59 &  & 5 & 2 & 4 & 1\\
--8.34 &  & -10.74 & -14.86 & -3.36 & -4.59 &  & -3.36 & -4.59 & -10.74 & -14.86 &  & 2 & 5 & 1 & 4\\
--5.33 &  & -26.65 & 9.44 & -9.07 & -5.85 &  & 9.44 & -5.85 & -9.07 & -26.65 &  & 4 & 5 & 2 & 1\\
--4.98 &  & -25.71 & -16.31 & -0.89 & -0.28 &  & -0.28 & -0.89 & -16.31 & -25.71 &  & 5 & 2 & 4 & 1\\
--6.99 &  & -27.27 & -16.65 & 14.70 & 2.72 &  & 14.70 & 2.72 & -16.65 & -27.27 &  & 2 & 4 & 4 & 1\\
+\begin{tabular}{ccccccccccc}
+\multicolumn{5}{c}{$\tilde{\mathbf{M}}$} & & \multicolumn{5}{c}{$\tilde{\mathbf{D}}$}\\
+$d_3$ & $d_5$ & $d_2$ & $d_4$ & $d_1$ &  & $d_3$ &  &  &  &  \\
+\cline{1-5} \cline{7-11}
+0.00 & 0.00 & 0.00 & 0.00 & 0.00 &  & 0.00 (3)& 0.00 (1)& 0.00 (4)& 0.00 (2)& 0.00 (5)\\
+-8.84 & -6.03 & -7.99 & -16.62 & -28.32 &  & -8.84 (3)& -6.03 (5)& -7.99 (2)& -16.62 (4)& -28.32 (1)\\
+-9.04 & -5.29 & -5.02 & -13.61 & -27.72 &  & -9.04 (3)& -5.02 (2)& -5.29 (5)& -13.61 (4)& -27.72 (1)\\
+-9.14 & 2.43 & -8.25 & 13.63 & -27.34 &  & -9.14 (3)& 13.63 (4)& 2.43 (5)& -8.25 (2)& -27.34 (1)\\
+-8.38 & -5.63 & -6.49 & -9.23 & -28.19 &  & -8.38 (3)& -5.63 (5)& -6.49 (2)& -9.23 (4)& -28.19 (1)\\
+-9.38 & -6.08 & -6.51 & -16.64 & -26.59 &  & -9.38 (3)& -6.08 (5)& -6.51 (2)& -16.64 (4)& -26.59 (1)\\
+-8.34 & -4.59 & -3.36 & -14.86 & -10.74 &  & -8.34 (3)& -3.36 (2)& -4.59 (5)& -10.74 (1)& -14.86 (4)\\
+-5.33 & -5.85 & -9.07 & 9.44 & -26.65 &  & -5.33 (3)& 9.44 (4)& -5.85 (5)& -9.07 (2)& -26.65 (1)\\
+-4.98 & -0.28 & -0.89 & -16.31 & -25.71 &  & -4.98 (3)& -0.28 (5)& -0.89 (2)& -16.31 (4)& -25.71 (1)\\
+-6.99 & 2.72 & 14.70 & -16.65 & -27.27 &  & -6.99 (3)& 14.70 (2)& 2.72 (5)& -16.65 (4) & -27.27 (1)
 \end{tabular}
 }
 \end{table}
 
-Consider each possible superset size $|S|+v$ (with $v=0,\ldots,4$). The lower bound 
+For each possible superset size $v=0,\ldots,f$, the lower and upper bounds are determined by the cumulative sums
 \begin{align*}
-L_v^\pi=M_S^\pi + \sum_{i=5-v}^{4} M_i^\pi
+& L_v^\pi=\sum_{i=1}^v \tilde{M}_i^\pi & U_v^\pi=\sum_{i=1}^v \tilde{D}_i^\pi,
 \end{align*}
-is determined by the $v$ predictors with the lowest observed value, so that only the supersets $S\subset \{3,5\}\subset\{2,3,5\}\subset\{2,3,4,5\}\subset F$ are considered. The upper bound
-\begin{align*}
-U(v)^\pi=M_S^\pi + \sum_{i=1}^v D_i^\pi
-\end{align*}
-is determined by the $v$ highest values for each permutation, i.e. the first $v$ columns of $D$. The $(1-\alpha)$-quantiles of the bounds (here $\alpha=0.20$) are:
+and the critical values are the corresponding $(1-\alpha)$-quantiles (here $\alpha=0.20$).
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.6]{plot1.pdf}
+%\caption{}
+%\label{fig:bounds}
+\end{figure}
+
+\newpage
+
+
 \begin{table}[h!]
 \centering
 \begin{tabular}{cccccc}
 \toprule
-$v$ & 0 & 1 & 2 & 3 & 4\\
+$v$ & 1 & 2 & 3 & 4 & 5\\
 \midrule
 $c_v(U)$ & -5.26 & 4.19 & 1.38 & -5.24 & -32.53\\
 $c_v(L)$ & -5.26 & -5.06 & -4.93 & -5.24 & -32.53\\
@@ -141,12 +163,16 @@ rejection & T & ? & ? & T & T\\
 \end{tabular}
 \end{table}
 
-\begin{figure}[h!]
-\centering
-\includegraphics[scale=0.6]{plot1.pdf}
-%\caption{}
-%\label{fig:bounds}
-\end{figure}
+However, if there is a column $\tilde{\mathbf{D}}_j$ ($j>1$) such that all the elements are non-positive, then also the following columns will be non-positive, and from that point on the upper critical value $c_v(U)$ will not increase. In particular, when $c_v(U)$  becomes negative, it will always remain negative, and thus all supersets from that size to $f$ will be rejected. Hence:
+\begin{itemize}
+\item we determine the column index $j$, if it exists;
+\item we compute the lower bound up to column $j-1$ (size $|S|+j-2$), to check for non-rejections;
+\item if needed, we continue by computing both bounds until $c_v(U)$ becomes negative. We know that higher sizes are all rejected;
+\item finally, $c_v(U)$ is computed for columns from 1 to $j-1$, in order to determine indecisive sizes.
+\end{itemize}
+If at any point a non-rejection is found, the search stops.
+
+In this case, $j=4$. The lower bounds up to size 3 are all negative, hence there are no non-rejections. 
 
 
 
@@ -169,7 +195,24 @@ In the "remove" branch, the lower bound remains the same, as the sum of the last
 
 
 
+\vspace{5mm}
+\paragraph{To do.} Check common addenda between keep and remove.
 
+\vspace{3mm}
+Check the shape of the upper bound curve. Does it always decrease from some point on? (Such point being when a column of $D$ has all negative elements). If it is true, we can compute the points where the curve crosses zero: we automatically reject for all the sizes such that the curve is below zero.
+
+Consider two vectors
+\begin{align*}
+&X=(x_1,\ldots,x_B)^\top\in\mathbb{R}^B  & Y=(y_1,\ldots,y_B)^\top\in[0,+\infty)^B
+\end{align*}
+as well as their difference $Z=X-Y$. Let $q_X$ and $q_Z$ be the quantiles of $X$ and $Z$, such that
+\begin{align*}
+&P(x_i\leq q_X)=1-\alpha  & P(z_i\leq q_Z)=1-\alpha .
+\end{align*}
+Since $z_i\leq x_i$ for each $i$, then $P(z_i\leq q_X)\geq P(x_i\leq q_X)=1-\alpha=P(z_i\leq q_Z)$. As a consequence, $q_X\geq q_Z$.
+
+\vspace{3mm}
+Check the behavior of different test statistics, e.g. harmonic mean p-value, Fisher combination etc.
 
 
 \end{document}

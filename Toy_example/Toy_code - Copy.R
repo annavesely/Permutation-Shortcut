@@ -45,15 +45,9 @@ gt <- function(n, f, B, beta0, beta){
 
 
 
-# -------------------------------------------------------------------------------- #
-
-
-
-
 # Given a matrix of test statistics, the function returns
-# M, matrix of centered test statistics where the rows are sorted so that
-# the first one in ascending order
-# D, matrix where each row is sorted in descending order
+# M, matrix of centered test statistics where the first row is sorted in descending order
+# D, matrix D where each row is sorted in descending order
 # I, matrix of the indices corresponding to the elements of D
 
 ctrp_set <- function(M){
@@ -61,7 +55,7 @@ ctrp_set <- function(M){
   B <- nrow(M)
   
   # ordering according to the first row
-  Im <- order(M[1,], decreasing=F)
+  Im <- order(M[1,], decreasing=T)
   M <- M[,Im]
   
   # centered test statistics
@@ -72,7 +66,6 @@ ctrp_set <- function(M){
   D <- t(sapply(seq(B), function(x) M[x, o[x,]]))
   I <- matrix(rep(Im,B), ncol=f, byrow=T)
   I <- t(sapply(seq(B), function(x) I[x, o[x,]]))
-  I[1,] <- rev(I[1,])
   
   out <- list("M"=M, "D"=D ,"I"=I)
   return(out)
@@ -80,7 +73,21 @@ ctrp_set <- function(M){
 
 
 
-# Internal function
+
+# Given a vector X and a significance level, the function returns TRUE
+# if 0 is greater than the quantile
+
+aq <- function(X, alpha=0.05){
+  c <- quantile(X, 1-alpha, names=F)
+  #out <- sign(c)<0
+  #return(out)
+  return(c)
+}
+
+
+
+
+# Internal function, used in ctrp_set
 # Given a set S of indices, it splits M, D and I, returning:
 # Ms, vector of the test statistic for S
 # Mc, matrix M with only the indices not in S
@@ -88,108 +95,35 @@ ctrp_set <- function(M){
 
 gen_sub <- function(S, M, D, I){
   B <- nrow(M)
-  f <- ncol(M)
   s <- length(S)
   
   #matrix/vector of indices of S in I
   ind <- t(sapply(seq(B), function(x) match(S, I[x,])))
   
-  
    # if s=1, then ind is a vector, otherwise it is a matrix
   if(s==1){
-    ind_m <- f + 1 - ind[1]
-    Ms <- M[,ind_m]
-    Mnew <- cbind(Ms, M[,-ind_m])
-    Dnew <- cbind(Ms, t(sapply(seq(B), function(x) D[x, -ind[x]])))
-    Inew <- cbind(rep(0, B), t(sapply(seq(B), function(x) I[x, -ind[x]])))
+    Ms <- M[,ind[1]]
+    Mc <- M[,-ind[1]]
+    Dc <- t(sapply(seq(B), function(x) D[x, -ind[x]]))
+    Ic <- t(sapply(seq(B), function(x) I[x, -ind[x]]))
   }else{
-    ind_m <- f + 1 - ind[1,]
-    Ms <- rowSums(M[,ind_m])
-    Mnew <- cbind(Ms, M[,-ind_m])
-    Dnew <- cbind(Ms, t(sapply(seq(B), function(x) D[x, -ind[x,]])))
-    Inew <- cbind(rep(0, B), t(sapply(seq(B), function(x) I[x, -ind[x,]])))
+    Ms <- rowSums(M[,ind[1,]])
+    Mc <- M[,-ind[1,]]
+    Dc <- t(sapply(seq(B), function(x) D[x, -ind[x,]]))
+    Ic <- t(sapply(seq(B), function(x) I[x, -ind[x,]]))
   }
   
-  Msum <- t(apply(cbind(Ms,M), 1, cumsum))
-  Dsum <- t(apply(cbind(Ms,D), 1, cumsum))
-  
-  out <- list("Msum"=Msum, "Dsum"=Dsum, "D"=D, "I"=I)
+  out <- list("Ms"=Ms, "Mc"=Mc, "Dc"=Dc, "Ic"=Ic)
   return(out)
 }
 
 
 
-# Internal function.
-# Given the matrices Mnew and Dnew, the function finds
-# the first column Dnew[,j] such that all the el. are negative/null
-# It computes all the quantiles up to j, and then other quantiles
-# until one of them is negative.
-
-upper_lower <- function(Mnew, Dnew, alpha=0.05){
-  
-  f <- ncol(D)
-  
-  # first column with only negative/null elements
-  j <- Find(function(x) sign(max(Dnew[,x]))<1 , 2:f)
-  if(is.null(j)){
-    j <- m+1
-  }
-  
-  # check on the first j quantiles
-  Msum <- t(apply(Mnew[,1:j], 1, cumsum))
-  Dsum <- t(apply(Dnew[,1:j], 1, cumsum))
-  h <- 0
-  cond <- T
-
-  while(h<j-1 & cond){
-    h <- h+1
-    low <- quantile(Msum[,h], 1-alpha, names=F)
-    cond <- sign(low)==-1
-  }
-  
-  cond2 <- T
-  while(h<m+1 & cond & cond2){
-    h <- h+1
-    low <- quantile(Msum[,h], 1-alpha, names=F)
-    cond <- sign(low)==-1
-    up <- quantile(Dsum[,h], 1-alpha, names=F)
-    cond2 <- sign(up)>-1
-  }
-  
-  if(!cond){
-    return("non rejection")
-  }
-  
-  # otherwise, the number h tells me where I have stopped
-  # after h there are only rejections
-  # between j and h, indecisive outcomes
-  # and I still need to check the upper bound between 1 and j-1
-  
-  ind <- sapply(seq(j-1), function(x)
-    sign(quantile(Dsum[,x], 1-alpha, names=F))>-1)
-  
-  indecisive <- seq(j-1)[ind]
-  
-  if(h>=j){
-    indecisive <- c(indecisive,(j:(h-1)))
-  }
-
-  return(indecisive)
-}
 
 
 
 
 
-
-
-
-
-S <- 3
-M <- c$M
-D <- c$D
-I <- c$I
-alpha <- 0.20
 
 # Given a vector of indices S, the function returns the vectors of the lower
 # and upper bounds.
@@ -203,54 +137,43 @@ ctrp_test <- function(S, M, D, I, alpha=0.05){
   # if s=f, we are testing the whole set of indices
   if(s==f){
     # lower and upper bounds (equal)
-    low <- quantile(rowSums(M), 1-alpha, names=F)
+    low <- aq(rowSums(M), alpha)
     up <- low
   }else{
-    g <- gen_sub(S, M, D, I)
-    
-    up <- upper_curve(g$D, g$Dsum, 0.20)
-    low <- c(up[1], rep(NA, length(up)-1))
-    # gestire il calcolo dei low
-    # posso escludere direttamente anche le size per cui up<0
-    
-    # ALTRIMENTI: determino la prima colonna negativa
-    # e faccio i conti su quella, partendo dal lower bound
-    # poi guardo i quartili dell'upper bound da lì in poi, fermandomi al primo negativo
-    # poi il lower bound di quelli
-    # e infine l'upper bound dei primi
-    
-    
-    
     # lower and upper bounds for each possible superset size
-    #low <- rep(NA, m+1)
-    #up <- low
+    low <- rep(NA, m+1)
+    up <- low
+    
+    g <- gen_sub(S, M, D, I)
 
     # v=0 additional columns (only the set S)
-    #low[1] <- quantile(g$Msum[,1])
-    #up[1] <- low[1]
+    L <- g$Ms
+    U <- L
+    low[1] <- aq(L, alpha)
+    up[1] <- low[1]
     
     # v=1 additional column
-    #v <- 1
+    v <- 1
     
     # if m=1, then M is a vector
     # and the only possible additional size is v=1
-    #if(m==1){
-    #  L <- L + g$Mc
-    #  U <- U + g$Dc
-    #  low[2] <- aq(L, alpha)
-    #  up[2] <- aq(U, alpha)
-    #}else{
-    #  while(v<m+1){
-    #    L <- L + g$Mc[,m-v+1] # L + the v-th smallest
-    #    U <- U + g$Dc[,v] # U + the v-th highest
-    #    low[v+1] <- aq(L, alpha)
-    #    up[v+1] <- aq(U, alpha)
-    #    v <- v+1
-    #  }
+    if(m==1){
+      L <- L + g$Mc
+      U <- U + g$Dc
+      low[2] <- aq(L, alpha)
+      up[2] <- aq(U, alpha)
+    }else{
+      while(v<m+1){
+        L <- L + g$Mc[,m-v+1] # L + the v-th smallest
+        U <- U + g$Dc[,v] # U + the v-th highest
+        low[v+1] <- aq(L, alpha)
+        up[v+1] <- aq(U, alpha)
+        v <- v+1
+      }
     }
-  #}
+  }
   
-  #out <- list("low"=low, "up"=up, "Ms"=g$Ms, "Mc"=g$Mc, "Dc"=g$Dc, "Ic"=g$Ic)
+  out <- list("low"=low, "up"=up, "Ms"=g$Ms, "Mc"=g$Mc, "Dc"=g$Dc, "Ic"=g$Ic)
   return(out)
 }
 
@@ -314,32 +237,10 @@ Dsum <- t(apply(Dnew, 1, cumsum))
 round(Msum,2)
 round(Dsum,2)
 
-alpha <- 0.20
-
-# first column such that the quantile is negative and
-# and all the elements of the next column are are negative/null
-# From this column until the end, all the quantiles are negative (rejections)
 
 
-upper_curve <- function(D, Dsum, alpha=0.05){
-  
-  # first column with only negative/null elements
-  j <- Find(function(x) sign(max(D[,x]))<1 , (2:5)) - 1
-  if(is.null(j)) j <- 5
-  
-  # quantiles only up to j
-  quant <- c(sapply(seq(j), function(x) quantile(Dsum[,x], 1-alpha, names=F)), rep(NA, 5-j))
-  
-  # then until a negative one is found
-  while(j<5 & sign(quant[j])>-1){
-    j <- j+1
-    quant[j] <- quantile(Dsum[,j], 1-alpha, names=F)
-  }
-  return(quant[1:j])
-}
-  
-  
-  
+
+
 Mnew <- t(apply(te$Mc,1,rev))
 Dnew <- te$Dc
 
