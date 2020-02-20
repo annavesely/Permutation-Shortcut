@@ -1,0 +1,174 @@
+\documentclass[11pt,a4paper,openright,twoside]{article}
+\usepackage[english]{babel}
+\usepackage{newlfont}
+\usepackage{color}
+\textwidth=450pt\oddsidemargin=0pt
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{caption}
+\usepackage{wrapfig}
+\usepackage{subfig}
+\usepackage{sidecap}
+\usepackage[rlft]{floatflt}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{fancyhdr}
+\usepackage{multirow}
+\usepackage[utf8x]{inputenc}
+\usepackage{fullpage}
+\usepackage[Lenny]{fncychap}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage{booktabs}
+\usepackage{enumerate}
+
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{light-gray}{gray}{0.95}
+\lstset{language=R,
+    basicstyle=\small\ttfamily,
+    stringstyle=\itshape\color{RedViolet},
+    showstringspaces=false,
+    otherkeywords={0,1,2,3,4,5,6,7,8,9},
+    morekeywords={TRUE,FALSE, ggplot, data.frame, theme, ylab, xlab},
+    deletekeywords={data, frame, beta, c, par, colours, contour, scale,
+                    panel, grid, hat},
+    keywordstyle=\color{RoyalBlue},
+    commentstyle=\itshape\color{PineGreen},
+    backgroundcolor=\color{light-gray}
+}
+
+\title{Permutation Closed Testing with Sum-Based Statistics}
+\author{}
+\date{}
+
+
+
+
+
+\begin{document}
+
+\maketitle
+
+
+\section{Sum-Based Test Statistics}
+Given a full model $F=\{1,\ldots, f\}$ of univariate hypotheses, let $S\subseteq F$ be a subset under test by closed testing with level $\alpha$. Hence $S$ is rejected if and only if all its supersets $V$ ($S\subseteq V\subseteq F$) are rejected.
+
+Let
+\[g_i^\pi\quad (i=1,\ldots,f,\; \pi=1,\ldots,B)\]
+be some test statistics corresponding to the $f$ covariates and $B$ random permutations, where the first permutation is the identity. Assume that such test statistics are such that
+\[g_V^\pi=\sum_{i\in V}g_i^\pi\quad (V\subseteq F,\;\pi=1,\ldots,B).\]
+Moreover, define the centered test statistics
+\[d_i^\pi = g_i^\pi - g_i \quad (i=1,\ldots,f,\; \pi=1,\ldots,B),\]
+so that the observed values are all $d_i=0$, and the variability due to $g_i$ is excluded.
+
+For $V\subseteq F$, the vector of its statistics is
+\[\mathbf{d_V}=(0,d_V^2,\ldots,d_V^B)^\top.\]
+Consider $d_V^{(1)}\leq d_V^{(2)}\leq\ldots\leq d_V^{(B)}$, and define $k=\lceil (1-\alpha) B\rceil$. An exact permutation test rejects $V$ if $0=d_V>d_V^{(k)}$, and rejects with probability
+\[a=\frac{\alpha B - \#\{\pi\,:\,d_V^\pi>d_V^{(k)}\}}{\#\{\pi\,:\,d_V^\pi=d_V^{(k)}\}}\]
+if $0=d_V=d_V^{(k)}$.
+
+
+
+
+
+
+\vspace{10mm}
+
+\section{Shortcut}
+Let $s=|S|$ and $m=f-s$. The possible superset sizes are $|V|=s+v$, with $v=0,\ldots,m$.
+
+Fix a value $v$. We will define a shortcut for the analysis of the supersets in
+\[\mathcal{V}_v=\{V\,:\,\;S\subseteq V\subseteq F,\; |V|=s+v\},\]
+that does not require the critical values of all the $\binom{m}{v}$ vectors $\mathbf{d}_V$ ($V\in\mathcal{V}_v$). It relies on the construction of a lower and an upper critical values, $L_v$ and $U_v$, such that
+\begin{itemize}
+\item if $L_v< 0$ (and with probability $a$ if $L_v=0$), then at least one superset $\tilde{V}\in\mathcal{V}_v$ is not rejected, and thus $S$ is not rejected;
+\item if $U_v<0$, then all supersets $V\in\mathcal{V}_v$ are rejected, and other sizes can be explored.
+\end{itemize}
+Notice that if $L_v\leq 0\leq U_v$, then the outcome is indecisive. 
+
+
+\paragraph{Lower critical value.} In order not to reject $S$, it is sufficient to find a non-rejected superset. Hence we consider $\tilde{V}\in\mathcal{V}_v$ which is likely to be non-rejected, and define the lower critical value as $L_v=d_{\tilde{V}}^{(k)}$.
+
+In particular, $\tilde{V}$ is defined by considering $S$ and the indices of the remaining $v$ smallest observed statistics. If $(i_1,\ldots,i_m)$ is a permutation of the indices in $F\setminus S$ such that
+\[g_{i_1}\leq g_{i_2}\leq\ldots\leq g_{i_m},\]
+then $\tilde{V}=S\cup \{i_1,\ldots,i_v\}$ and
+\[d_{\tilde{V}}^\pi = d_S^\pi + \sum_{h=1}^v d_{i_h}^\pi\quad (\pi=1,\ldots,B).\]
+
+\paragraph{Upper critical value.} The upper critical value is $U_v=u_v^{(k)}$, where
+\[\mathbf{u}_v=(0,u_v^2,\ldots,u_v^B)^\top\]
+is a vector such that
+\[u_v^\pi\geq d_V^\pi\quad (V\in\mathcal{V}_v,\;\pi=1,\ldots,B).\]
+As a consequence,
+\[U_v \geq d_V^{(k)}\quad (V\in\mathcal{V}_v).\]
+If $U_v<0$, then all supersets in $\mathcal{V}_v$ are rejected.
+
+For each $\pi=1,\ldots,B$, the element $u_v^\pi$ is defined by considering $d_S^\pi$ and the remaining $v$ highest centered statistics. If $(j_1(\pi),\ldots,j_m(\pi))$ is a permutation of the indices in $F\setminus S$ such that
+\[d_{j_1(\pi)}^\pi\geq d_{j_2(\pi)}^\pi\geq\ldots d_{j_m(\pi)}^\pi ,\]
+then
+\[u_v^\pi=d_S^\pi + \sum_{h=1}^v d_{j_h(\pi)}^\pi.\]
+
+
+
+
+\paragraph{Testing.}
+The values $v=0,\ldots, m$ are checked in sequence.
+\begin{itemize}
+\item As soon as a non-rejection is found ($\tilde{v}$ with $L_{\tilde{v}}< 0$), the analysis stops and $S$ is not rejected.
+\item If all values lead to rejection ($U_v<0$ for all $v$), then $S$ is rejected.
+\item If some values $v\in \{1,\ldots,m-1\}$ lead to indecisive outcomes ($L_v\leq 0\leq U_v$), the Branch and Bound method is applied. Notice that an indecisive outcome cannot occur for $v=0$ or $v=m$, since
+\begin{align*}
+& L_0=U_0=d_S^{(k)} & L_m=U_m=d_F^{(k)}.
+\end{align*}
+\end{itemize}
+
+
+
+\paragraph{Early stop.} Assume that there exists $w\in\{1,\ldots,m\}$ such that
+\[d_{j_w(\pi)}^\pi\leq 0\quad (\pi=1,\ldots,B)\]
+or, equivalently,
+\[u_w^\pi =u_{w-1}^\pi +d_{j_w(\pi)}^\pi\leq u_{w-1}^\pi\quad (\pi=1,\ldots,B).\]
+Then the upper critical value is non-increasing for $v\geq w$:
+\begin{align*}
+d_{j_m(\pi)}^\pi\leq \ldots \leq d_{j_w(\pi)}^\pi \leq 0&\quad(\pi=1,\ldots,B)\\
+u_m^\pi \leq\ldots\leq u_w^\pi\leq u_{w-1}^\pi&\quad(\pi=1,\ldots,B)\\
+U_m \leq\ldots\leq U_w\leq U_{w-1}. &
+\end{align*}
+
+In this case, it is sufficient to stop the analysis as soon as we find a value $v^*\geq w-1$ such that $U_{v^*}<0$. All the supersets with $v\geq v^*$ are automatically rejected.
+
+
+
+
+
+\vspace{10mm}
+
+\section{Branch and Bound}
+Assume that some values $v\in\{1,\ldots,m-1\}$ lead to an indecisive outcome. 
+
+For a fixed index $e\in F\setminus S$, the total space $\mathbb{S}=\{V\,:\,S\subseteq V\subseteq F\}$ is partitioned into two disjoint subspaces, according to the inclusion of $e$:
+\begin{align*}
+&\mathbb{S}_{-}=\{V\,:\,S\subseteq V\subseteq F\setminus\{e\}\} & \mathbb{S}_{+}=\{V\,:\,S\cup\{e\}\subseteq V\subseteq F\}.
+\end{align*}
+
+The shortcut is applied to each subspace, in order to evaluate the indecisive values $v$:
+\begin{itemize}
+\item if $S$ is not rejected in at least one subspace, it is not rejected in the total space;
+\item if $S$ is rejected in both subspaces, it is rejected in the total space;
+\item if there is an indecisive outcome in at least one subspace, the procedure is iterated by partitioning the indecisive subspace(s).
+\end{itemize}
+
+For any choice of $e$, $U_v$ does not increase in the subspaces (since it is defined by taking the maximum statistics over smaller subsets). However, the choice of $e$ and the order in which the subspaces are explored influence $L_v$, and thus the efficiency of the algorithm. We wish to begin with the subspaces that are more likely to lead to a rejection, i.e. where $L_v$ is more likely to be high.
+
+I will evaluate the efficiency in three different scenarios, employing the order of the observed statistics in $F\setminus S$.
+\begin{itemize}
+\item Removal of the highest statistic: $e=i_m$, and $\mathbb{S}_{-}$ is explored first. In this case, $L_v$ does not vary in $\mathbb{S}_{-}$, and is likely to decrease in $\mathbb{S}_{+}$.
+\item Keeping of the lowest statistic: $e=i_1$, and $\mathbb{S}_{+}$ is explored first. In this case, $L_v$ may decrease in $\mathbb{S}_{-}$, and does not vary in $\mathbb{S}_{+}$.
+\item Removal of the lowest statistic: $e=i_m$, and $\mathbb{S}_{-}$ is explored first.
+\end{itemize}
+
+\end{document}

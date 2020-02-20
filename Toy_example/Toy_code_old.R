@@ -45,18 +45,18 @@ gt <- function(n, f, B, beta0, beta){
 
 
 
-# Given a matrix of test statistics, the function returns
+# Given a matrix G of test statistics, the function returns
 # M, matrix of centered test statistics where the first row is sorted in descending order
 # D, matrix D where each row is sorted in descending order
 # I, matrix of the indices corresponding to the elements of D
 
-ctrp_set <- function(M){
-  f <- ncol(M)
-  B <- nrow(M)
+ctrp_set <- function(G){
+  f <- ncol(G)
+  B <- nrow(G)
   
   # ordering according to the first row
-  Im <- order(M[1,], decreasing=T)
-  M <- M[,Im]
+  Im <- order(G[1,], decreasing=T)
+  M <- G[,Im]
   
   # centered test statistics
   M <- sweep(M, 2, M[1,])
@@ -195,7 +195,7 @@ ctrp_plot <- function(low, up){
     geom_point(aes(size, up), colour="red", size=2) +
     geom_line(aes(size, up), colour="red") +
     geom_point(aes(size, obs), size=2) +
-    ylab("") + xlab("additional size")
+    ylab("") + xlab("v")
 }
 
 
@@ -207,8 +207,8 @@ ctrp_plot <- function(low, up){
 # TOY EXAMPLE
 
 # matrix of global test statistics
-M <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
-c <- ctrp_set(M)
+initial_data <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
+c <- ctrp_set(initial_data)
 
 
 # set under testing
@@ -216,111 +216,101 @@ S <- c(3)
 te <- ctrp_test(S, c$M, c$D, c$I, 0.20)
 ctrp_plot(te$low, te$up)
 
-
-
+te$up
+te$low
 
 # -------------------------------------------------------------------------------- #
+alpha <- 0.2
+B <- 10
+m <- 4
+Ms <- te$Ms
+Mc <- t(sapply(seq(B), function(x) te$Mc[x,rev(seq(4))]))
+Dc <- te$Dc
+Ic <- te$Ic
+indecisive <- c(1,2)
 
+p <- prova(from_top=F, indecisive, Mc, Dc, Ic, B, alpha)
+# rem: 1, keep:2
 
-# somme cumulate
-#t(apply(M, 1, cumsum))
-#ma devo invertire l'ordine
-# perché sommo le colonne dal fondo
-# Ma ha senso salvare un'altra matrice
-# o è meno peggio rifare le somme tutte le volte?
+pr <- prova(from_top=T, p$indecisive_r, p$Mc, p$Dc, p$Ic, B, alpha)
+# STOP
 
-Mnew <- cbind(te$Ms, t(apply(te$Mc,1,rev)))
-Dnew <- cbind(te$Ms, te$Dc)
+prova <- function(from_top, indecisive, Mc, Dc, Ic, B, alpha){
+  if(from_top){
+    i <- 1
+  }else{
+    i <- ncol(Mc)
+  }
+  Q <- Ic[1,i]
+  ind <- t(sapply(seq(B), function(x) match(Q, Ic[x,])))
+  ind_m <- ncol(Mc)+1-ind[1]
+  
+  Mc2 <- Mc[,-ind_m]
+  Dc2 <- t(sapply(seq(B), function(x) Dc[x, -ind[x]]))
+  Ic2 <- t(sapply(seq(B), function(x) Ic[x, -ind[x]]))
+  
+  if(nrow(Dc2)==1){
+    Dsum2 <- t(apply(cbind(Ms,t(Dc2)), 1, cumsum))
+    Msum2 <- t(apply(cbind(Ms,t(Mc2)), 1, cumsum))
+  }else{
+    Dsum2 <- t(apply(cbind(Ms,Dc2), 1, cumsum))
+    Msum2 <- t(apply(cbind(Ms,Mc2), 1, cumsum))
+  }
 
-Msum <- t(apply(Mnew, 1, cumsum))
-Dsum <- t(apply(Dnew, 1, cumsum))
-round(Msum,2)
-round(Dsum,2)
-
-
-
-
-
-Mnew <- t(apply(te$Mc,1,rev))
-Dnew <- te$Dc
-
-Msum <- t(apply(Mnew, 1, cumsum))
-Dsum <- t(apply(Dnew, 1, cumsum))
-round(Msum,2)
-round(Dsum,2)
-
-nq <- function(v, sum_matrix, Ms, alpha=0.05){
-  out <- quantile(Ms + sum_matrix[,v], 1-alpha, names=F)
+  # lower bounds
+  
+  n_ind <- length(indecisive)
+  low_r <- rep(NA, n_ind)
+  low_k <- low_r
+  up_r <- low_r
+  up_k <- low_r
+  
+  h <- 1
+  cond_low <- T
+  while(cond_low & h<=length(indecisive)){
+    v <- indecisive[h]
+    low_r[h] <- quantile(Msum2[,v+1], 1-alpha, names=F)
+    low_k[h] <- quantile(Msum2[,v]+Mc[,ind_m], 1-alpha, names=F)
+    cond_low <- (sign(low_r[h])==-1) & (sign(low_k[h])==-1)
+    h <- h+1
+  }
+  
+  if(!cond_low){
+    out <- list("non_rej"=T, "indecisive_r"=NULL, "indecisive_k"=NULL,
+                "Mc"=NULL, "Dc"=NULL, "Ic"=NULL)
+    return(out)
+  }
+  
+  up_r <- sapply((1:n_ind), function(x)
+    quantile(Dsum2[,indecisive[x]+1], 1-alpha, names=F))
+  ind_r <- sapply((1:n_ind), function(x)
+    sign(up_r[x]>-1))
+  
+  if(all(!ind_r)){
+    indecisive_r <- NULL
+  }else{
+    indecisive_r <- indecisive[ind_r]
+  }
+  
+  up_k <- sapply((1:n_ind), function(x)
+    quantile(Dsum2[,indecisive[x]]+Mc[,ind_m], 1-alpha, names=F))
+  ind_k <- sapply((1:n_ind), function(x)
+    sign(up_k[x]>-1))
+  
+  if(all(!ind_k)){
+    indecisive_k <- NULL
+  }else{
+    indecisive_k <- indecisive[ind_k]
+  }
+  out <- list("non_rej"=F, "indecisive_r"=indecisive_r, "indecisive_k"=indecisive_k,
+              "low_r"=low_r, "up_r"=up_r, "low_k"=low_k, "up_k"=up_k,
+              "Mc"=Mc2, "Dc"=Dc2, "Ic"=Ic2)
   return(out)
 }
 
-sapply(seq(4), nq, Msum, te$Ms, 0.20)
-sapply(seq(4), nq, Dsum, te$Ms, 0.20)
 
-
-round(Dsum-Msum,2)
-
-
-aq(Mnew[,1], 0.8)
-round(apply(Msum, 2, aq, alpha=0.8),2)
-round(apply(Dsum, 2, aq, alpha=0.8),2)
-
-
-
-
-xprova <- runif(10, min=-10, max=10)
-yprova <- runif(10, min=0, max=10)
-zprova <- xprova-yprova
-qx <- quantile(xprova, 0.80, names=F)
-qz <- quantile(zprova, 0.80, names=F)
-out <- qz<=qx
-out
 
 
 # -------------------------------------------------------------------------------- #
-
-# sizes v=1 and v=2 are indecisive
-
-
-
-
-
-newsub <- gen_sub(1, te$Mc, te$Dc, te$I)
-Dnew <- newsub$Dc
-Inew <- newsub$Ic
-Mfixed <- newsub$Ms
-
-# REMOVE 1
-# low = same as before
-# up = Ms + sum of the v highest elements of Dnew
-
-low_rem <- c(NA, NA)
-up_rem <- c(NA, NA)
-
-# v=1
-L <- te$Ms + te$Mc[,4] # same as before
-low_rem[1] <- aq(L, 0.20)
-
-U <- te$Ms + Dnew[,1]
-up_rem[1] <- aq(U, 0.20)
-
-# v=2
-L <- L +te$Mc[,3] # same as before
-low_rem[2] <- aq(L, 0.20)
-
-U <- U + Dnew[,2]
-up_rem[2] <- aq(U, 0.20)
-
-
-# KEEP ONE
-# low = Ms + Mfixed + sum of last (v-1) elements of M
-# up = Ms + Mfixed + sum of the (v-1) highest elements of Dew
-
-low_keep <- c(NA, NA)
-up_keep <- c(NA, NA)
-
-# v=1
-L <- te$Ms + te$Mc[,1] # U = L
-low_keep[1] <- aq(L, 0.20)
 
 
