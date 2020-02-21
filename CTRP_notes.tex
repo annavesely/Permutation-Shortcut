@@ -68,9 +68,13 @@ so that the observed values are all $d_i=0$, and the variability due to $g_i$ is
 
 For $V\subseteq F$, the vector of its statistics is
 \[\mathbf{d_V}=(0,d_V^2,\ldots,d_V^B)^\top.\]
-Consider $d_V^{(1)}\leq d_V^{(2)}\leq\ldots\leq d_V^{(B)}$, and define $k=\lceil (1-\alpha) B\rceil$. An exact permutation test rejects $V$ if $0=d_V>d_V^{(k)}$, and rejects with probability
-\[a=\frac{\alpha B - \#\{\pi\,:\,d_V^\pi>d_V^{(k)}\}}{\#\{\pi\,:\,d_V^\pi=d_V^{(k)}\}}\]
-if $0=d_V=d_V^{(k)}$.
+Consider $d_V^{(1)}\leq d_V^{(2)}\leq\ldots\leq d_V^{(B)}$, and define $k=\lceil (1-\alpha) B\rceil$. An exact permutation test is such that
+\begin{itemize}
+\item if $d_V^{(k)}<0$, $V$ is rejected;
+\item if $d_V^{(k)}=0$, $V$ is rejected with probability
+\[a=\frac{\alpha B - \#\{\pi\,:\,d_V^\pi>0\}}{\#\{\pi\,:\,d_V^\pi=0\}}.\]
+\end{itemize}
+
 
 
 

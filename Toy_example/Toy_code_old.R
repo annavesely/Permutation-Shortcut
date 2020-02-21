@@ -76,9 +76,10 @@ ctrp_set <- function(G){
 
 # Given a vector X and a significance level, the function returns TRUE
 # if 0 is greater than the quantile
-
 aq <- function(X, alpha=0.05){
-  c <- quantile(X, 1-alpha, names=F)
+  k <- ceiling((1-alpha)*length(X))
+  Xord <- sort(X, na.last = NA, decreasing=F, method="quick")
+  c <- Xord[k]
   #out <- sign(c)<0
   #return(out)
   return(c)

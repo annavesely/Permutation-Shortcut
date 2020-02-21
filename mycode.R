@@ -45,11 +45,18 @@ Q <- function(X, k=ceiling(0.95*length(X))){
 
 # Internal function
 # Given a vector X and a value k, it computes the lower critical value L
-# and returns TRUE if L<0 (no non-rejection found)
+# if L<0, it returns TRUE (no non-rejection found)
+# if L=0, it returns TRUE with probability a
 
-Lcond <- function(X, k=ceiling(0.95*length(X))){
+Lcond <- function(X, k=ceiling(0.95*length(X)), aB=k){
   L <- Q(X, k)
-  c <- sign(L)==-1
+  
+  if(L==0){
+    a <- (aB - length(X[X > 0]))/length(X[X == 0])
+    c <- rbinom(n=1, size=1, prob=a)
+  }else{
+    c <- sign(L)==-1
+  }
   return(c)
 }
 
@@ -130,7 +137,7 @@ compute_bounds <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m
   
   h <- 1
   v <- indecisive[1]
-  low <- Lcond(Dsum[,v+1], k)
+  low <- Lcond(Dsum[,v+1], k, aB)
   up[1] <- Ucond(Rsum[,v+1], k)
   
   # first column in R with no positive element
@@ -145,7 +152,7 @@ compute_bounds <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m
   while(low & v<j-1 & h<H){
     h <- h+1
     v <- indecisive[h]
-    low <- Lcond(Dsum[,v+1], k)
+    low <- Lcond(Dsum[,v+1], k, aB)
     up[h] <- Ucond(Rsum[,v+1], k)
   }
   
@@ -153,7 +160,7 @@ compute_bounds <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m
   while(low & up[h] & h<H){
     h <- h+1
     v <- indecisive[h]
-    low <- Lcond(Dsum[,v+1], k)
+    low <- Lcond(Dsum[,v+1], k, aB)
     up[h] <- Ucond(Rsum[,v+1], k)
   }
 
@@ -178,6 +185,7 @@ compute_bounds_fast <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R
   
   h <- 1
   v <- indecisive[1]
+  up[1] <- Ucond(Rsum[,v+1], k)
   
   # first column in R with no positive element
   j <- Find(function(x) sign(max(R[,x]))<1 , seq(m))
@@ -201,7 +209,8 @@ compute_bounds_fast <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R
     up[h] <- Ucond(Rsum[,v+1], k)
   }
   
-  return(indecisive[up])
+  out <- indecisive[up]
+  return(out)
 }
 
 
@@ -221,12 +230,13 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000){
   B <- nrow(D)
   s <- length(S)
   m <- f-s
+  aB <- alpha*B
   k <- ceiling((1-alpha)*B)
   
   # if S=F:
   if(m==0){
     # lower and upper bounds (equal)
-    low <- Lcond(rowSums(D), k)
+    low <- Lcond(rowSums(D), k, aB)
     out <- list("non_rej"=!low, "BAB"=0)
     return(out)
   }
@@ -245,15 +255,15 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000){
     return(out)
   }
   
-  b <- ctrp_bab(cb$indecisive, g$ds, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
-  return(b)
+  #out <- ctrp_bab(cb$indecisive, g$ds, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
+  # return(out)
   
   #out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive)
   
-  #out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive,
-              #"ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I,
-              #"Dsum"=Dsum, "Rsum"=Rsum)
-  #return(out)
+  out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive,
+              "ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I,
+              "Dsum"=Dsum, "Rsum"=Rsum)
+ return(out)
   
 }
 
@@ -389,7 +399,7 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
   list_kept <- list(0)
   list_ind <- list(indecisive_0)
   
-  BAB <- 0
+  BAB <- 0 # steps
   lev <- 0
   non_rej <- F
   cond <- T
@@ -400,24 +410,24 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     
     # we keep removing the highest statistic until we can close a branch
     while(cond & BAB<n_max){
-      BAB <- BAB + 1 # steps
+      BAB <- BAB + 1
       lev <- lev + 1
       us <- update_sets1(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m, B)
       
-      indecisive <- compute_bounds_fast(list_ind[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
+      indecisive <- compute_bounds_fast(tail(list_ind,1)[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
       cond <- length(indecisive)>0
       
       if(cond){
-        list_lev <- c(lev, list_lev)
-        list_kept <- c(us$d_kept, list_kept)
-        list_ind <- c(indecisive, list_ind)
+        list_lev <- append(list_lev, lev)
+        list_kept <- append(list_kept, us$d_kept)
+        list_ind <- append(list_ind, list(indecisive))
       }
     }
     
     # then we explore the branch right next to it
     BAB <- BAB + 1
     us <- update_sets2(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m)
-    cb <- compute_bounds(list_ind[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
+    cb <- compute_bounds(list_ind[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
     if(cb$non_rej){
       out <- list("non_rej"=T, "BAB"=BAB)
       return(out)
@@ -425,19 +435,20 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     
     # remove previous element from list, since now that the right branch has been
     # generated, it has been completely analyzed
-    list_lev <- list_lev[-1]
-    list_kept <- list_kept[-1]
-    list_ind <- list_ind[-1]
+    L <- length(list_lev)
+    list_lev <- list_lev[-L]
+    list_kept <- list_kept[-L]
+    list_ind <- list_ind[-L]
     
     cond <- length(cb$indecisive)>0
     
     # if the set is not indecisive, we take the next element from the list, and add
     # the lev-th statistic
-    while(!cond & length(list_lev)>0 & BAB<n_max){
+    while(!cond & L>0 & BAB<n_max){
       BAB <- BAB + 1
-      lev <- list_lev[[1]] + 1
+      lev <- tail(list_lev,1)[[1]] + 1
       us <- update_sets3(lev, list_kept[[1]], ds, D_0, R_0, I_0, Dsum_0, m, B)
-      cb <- compute_bounds(list_ind[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
+      cb <- compute_bounds(list_ind[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
       
       if(cb$non_rej){
         out <- list("non_rej"=T, "BAB"=BAB)
@@ -446,9 +457,10 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
       
       # remove previous element from list, since now that the right branch has been
       # generated, it has been completely analyzed
-      list_lev <- list_lev[-1]
-      list_kept <- list_kept[-1]
-      list_ind <- list_ind[-1]
+      L <- length(list_lev)
+      list_lev <- list_lev[-L]
+      list_kept <- list_kept[-L]
+      list_ind <- list_ind[-L]
       
       cond <- length(cb$indecisive)>0
     }
@@ -456,9 +468,9 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     # if one indecisive set has been found, it is added
     # (otherwise it means that the list has become empty without finding such a set)
     if(cond){
-      list_lev <- c(lev, list_lev)
-      list_ind <- c(cb$indecisive, list_ind)
-      list_kept <- c(us$d_kept, list_kept)
+      list_lev <- append(list_lev, lev)
+      list_kept <- append(list_kept, us$d_kept)
+      list_ind <- append(list_ind, list(indecisive))
     }
   }
   

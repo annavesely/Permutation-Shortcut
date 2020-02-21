@@ -82,3 +82,115 @@ m <- 4
 f <- 5
 s <- 1
 B <- 10
+aB <- alpha*B
+
+
+# CASE 1
+f <- function(D, R, I){
+  m <- ncol(D)
+  B <- nrow(D)
+  A <- D[,m]
+  D_new <- D[,1:(m-1)]
+  r <- I[1,1]
+  I_new <- matrix(rep(NA, B*(m-1)), ncol=(m-1))
+  R_new <- I_new
+  
+  for(x in seq(B)){
+    i <- match(r, I[x,])
+    I_new[x,] <- I[x,-i]
+    R_new[x,] <- R[x,-i]
+  }
+  out <- list("D"=D_new, "R"=R_new, "I"=I_new, "A"=A)
+  return(out)
+}
+
+
+# step 1: -1
+P <- f(D_0, R_0, I_0)
+Dsum <- t(apply(cbind(ds,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds,P$R),1,cumsum))
+c(Q(Rsum[,2],k), Q(Rsum[,3],k)) # upper bounds
+c(Q(Dsum[,2],k), Q(Dsum[,3],k)) # lower bounds
+A1 <- P$A
+# step 2: -1,-4
+P <- f(P$D, P$R, P$I)
+Dsum <- t(apply(cbind(ds,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds,P$R),1,cumsum))
+c(Q(Rsum[,2],k), Q(Rsum[,3],k)) # upper bounds
+c(Q(Dsum[,2],k), Q(Dsum[,3],k)) # lower bounds
+# step 3: -1,+4
+Dsum <- t(apply(cbind(ds+P$A,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds+P$A,P$R),1,cumsum))
+c(Q(Rsum[,1],k), Q(Rsum[,2],k)) # upper bounds
+c(Q(Dsum[,1],k), Q(Dsum[,2],k)) # lower bounds
+X <- Dsum[,1]
+a <- (aB - length(X[X > 0]))/length(X[X == 0])
+a # 0 - > not reject
+
+
+
+# CASE 2
+f <- function(D, R, I){
+  m <- ncol(D)
+  B <- nrow(D)
+  A <- D[,1]
+  D_new <- D[,2:m]
+  r <- I[1,m]
+  I_new <- matrix(rep(NA, B*(m-1)), ncol=(m-1))
+  R_new <- I_new
+  
+  for(x in seq(B)){
+    i <- match(r, I[x,])
+    I_new[x,] <- I[x,-i]
+    R_new[x,] <- R[x,-i]
+  }
+  out <- list("D"=D_new, "R"=R_new, "I"=I_new, "A"=A)
+  return(out)
+}
+
+
+# step 1: -5
+P <- f(D_0, R_0, I_0)
+Dsum <- t(apply(cbind(ds,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds,P$R),1,cumsum))
+c(Q(Rsum[,2],k), Q(Rsum[,3],k)) # upper bounds
+c(Q(Dsum[,2],k), Q(Dsum[,3],k)) # lower bounds
+# indecisive: 1
+A1 <- P$A
+# step 2: -5,-2
+P <- f(P$D, P$R, P$I)
+Dsum <- t(apply(cbind(ds,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds,P$R),1,cumsum))
+Q(Rsum[,2],k) # upper bounds
+Q(Dsum[,2],k) # lower bounds
+X <- Dsum[,2]
+a <- (aB - length(X[X > 0]))/length(X[X == 0])
+a #0 - > not reject
+
+
+
+# CASE 3
+# step 1: +5
+P <- f(D_0, R_0, I_0)
+Dsum <- t(apply(cbind(ds + P$A,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds + P$A,P$R),1,cumsum))
+c(Q(Rsum[,1],k), Q(Rsum[,2],k)) # upper bounds
+c(Q(Dsum[,1],k), Q(Dsum[,2],k)) # lower bounds
+# indecisive: 2
+A1 <- P$A
+# step 2: +5,+2
+P <- f(P$D, P$R, P$I)
+Dsum <- t(apply(cbind(ds + P$A + A1,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds + P$A + A1,P$R),1,cumsum))
+Q(Rsum[,1],k) # upper bounds
+Q(Dsum[,1],k) # lower bounds
+# step 3: +5,-2
+Dsum <- t(apply(cbind(ds + A1,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds + A1,P$R),1,cumsum))
+Q(Rsum[,2],k) # upper bounds
+Q(Dsum[,2],k) # lower bounds
+# from above: +5...
+# from above: +5...
+
+
+

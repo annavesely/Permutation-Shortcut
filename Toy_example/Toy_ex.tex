@@ -23,24 +23,32 @@
 \usepackage[normalem]{ulem}
 \usepackage{booktabs}
 \usepackage{enumerate}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
 
-\usepackage[usenames,dvipsnames]{xcolor}
-\usepackage{listings}
-\usepackage{xcolor}
+\tikzset{c-rectangle2/.style={rectangle, rounded corners, minimum width=2cm, minimum height=1cm, text centered, text width=4.5cm, draw=black, fill=white},
+arrow/.style={thick,->,>=stealth}}
 
-\definecolor{light-gray}{gray}{0.95}
-\lstset{language=R,
-    basicstyle=\small\ttfamily,
-    stringstyle=\itshape\color{RedViolet},
-    showstringspaces=false,
-    otherkeywords={0,1,2,3,4,5,6,7,8,9},
-    morekeywords={TRUE,FALSE, ggplot, data.frame, theme, ylab, xlab},
-    deletekeywords={data, frame, beta, c, par, colours, contour, scale,
-                    panel, grid, hat},
-    keywordstyle=\color{RoyalBlue},
-    commentstyle=\itshape\color{PineGreen},
-    backgroundcolor=\color{light-gray}
-}
+
+%\usepackage[usenames,dvipsnames]{xcolor}
+%\usepackage{listings}
+%\usepackage{xcolor}
+
+%\definecolor{light-gray}{gray}{0.95}
+%\lstset{language=R,
+%    basicstyle=\small\ttfamily,
+%    stringstyle=\itshape\color{RedViolet},
+%    showstringspaces=false,
+%    otherkeywords={0,1,2,3,4,5,6,7,8,9},
+%    morekeywords={TRUE,FALSE, ggplot, data.frame, theme, ylab, xlab},
+%    deletekeywords={data, frame, beta, c, par, colours, contour, scale,
+%                    panel, grid, hat},
+%    keywordstyle=\color{RoyalBlue},
+%    commentstyle=\itshape\color{PineGreen},
+%    backgroundcolor=\color{light-gray}
+%}
+
+
 
 \title{CTRP - A Toy Example}
 \author{}
@@ -54,7 +62,8 @@
 
 \maketitle
 
-\paragraph{Data.} Considering $f=5$ predictors and $B=10$ permutations, we simulate a $B\times f$ matrix of global test statistics:
+\section{Data}
+Considering $f=5$ predictors and $B=10$ permutations, we simulate a $B\times f$ matrix of global test statistics:
 
 \begin{table}[h!]
 \centering
@@ -81,7 +90,8 @@ Assume that we want to test $S=\{3\}$ with significance level $\alpha=0.20$.
 
 
 \vspace{5mm}
-\paragraph{Shortcut.} The supersets of $S$ have sizes $1+v$ with $v=0,\ldots,4$:
+\section{Shortcut}
+The supersets of $S$ have sizes $1+v$ with $v=0,\ldots,4$:
 
 \begin{table}[h!]
 \centering
@@ -104,7 +114,7 @@ We define
 \end{itemize}
 The lower and upper critical values, $L_v$ and $U_v$, are the ($1-\alpha$)-quantiles of
 \begin{align*}
-& \mathbf{d}_{\tilde{V}}=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{D}_i & \mathbf{u}_v=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{T}_i,
+& \mathbf{d}_{\tilde{V}}=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{D}_i & \mathbf{u}_v=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{R}_i,
 \end{align*}
 respectively.
 
@@ -150,34 +160,262 @@ Finally, we determine the indecisive values by looking at $U_v$. Here they are $
 \toprule
 $v$ & 0 & 1 & 2 & 3 & 4\\
 \midrule
-$U_v$ & -5.26 & 4.19 & 1.38 & -5.24 & (-32.53)\\
-$L_v$ & -5.26 & -5.06 & -4.93 & -5.24 & (-32.53)\\
+$U_v$ & -5.33 & 4.11 & 0.00 & -6.22 & (-33.49)\\
+$L_v$ & -5.33 & -5.26 & -6.16 & -6.22 & (-33.49)\\
 \midrule
-rejection & T & ? & ? & T & T\\
+rej & T & ? & ? & T & T\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 
 \newpage
-
-\vspace{5mm}
-\paragraph{Branch and Bound when removing the highest statistic.}
-The last index in $\mathbf{D}$, $i=1$, determines the branching rule. We explore first the subspace where the index is removed.
-
-
+\section{Branch and Bound}
+\subsection{Removal of the highest statistic.}
+The last index in $\mathbf{D}$, $e=1$, determines the branching rule. We explore first the subspace $\mathbb{S}_{-1}$, where the index is removed.
 \begin{table}[h!]
 \centering
 \begin{tabular}{c|ccccccc}
- & \multicolumn{3}{c}{remove} & & \multicolumn{3}{c}{keep}\\
- & \multicolumn{3}{c}{$S\subseteq V\subseteq F\setminus\{1\}$} & & \multicolumn{3}{c}{$S\cup\{1\}\subseteq V\subseteq F$}\\
+ & \multicolumn{3}{c}{$\mathbb{S}_{-1}$} & & \multicolumn{3}{c}{$\mathbb{S}_{+1}$}\\
 \cline{2-4} \cline{6-8}
 2 & $\{2,3,4\}$ & $\{2,3,5\}$ & $\{3,4,5\}$ & & $\{1,2,3\}$ & $\{1,3,4\}$ & $\{1,3,5\}$ \\
 1 & $\{2,3\}$ & $\{3,4\}$ & $\{3,5\}$ & & & $\{1,3\}$ &  \\
 \end{tabular}
 \end{table}
 
-%In the "remove" branch, the lower bound remains the same, as the sum of the last $v$ columns of $M$ is not affected by the removal of the first column. However, the upper bound changes in both branches, as the elements corresponding to $i=1$ (in $I$) are removed.
+Since the outcome is still indecisive for both sizes $v=1,2$, the subspace is partitioned again according to the inclusion of $e=4$ (corresponding to the second highest statistic $g_i$).
+\begin{table}[h!]
+\centering
+\begin{tabular}{c|ccccccc}
+ & \multicolumn{3}{c}{$\mathbb{S}_{-1,-4}$} & & \multicolumn{3}{c}{$\mathbb{S}_{-1,+4}$}\\
+\cline{2-4} \cline{6-8}
+2 &  & $\{2,3,5\}$ &  & & $\{2,3,4\}$ &  & $\{3,4,5\}$ \\
+1 & $\{2,3\}$ &  & $\{3,5\}$ &  &  & $\{3,4\}$ &  \\
+\end{tabular}
+\end{table}
+
+$S$ is rejected in both subspaces. We proceed by exploring $\mathbb{S}_{+1}$, where $S$ is not rejected. In particular, the superset $V=\{3,4\}$ is not rejected.
+
+In conclusion, $S$ is not rejected after 3 steps.
+
+\vspace{5mm}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance = 4cm]
+\node (n0) [c-rectangle2] {Start\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 4.11 & 0.00\\
+$L_v$ & -5.26 & -6.16\\
+\midrule
+rej & ? & ?\\
+\bottomrule
+\end{tabular}
+};
+\node (n1) [c-rectangle2, below of=n0, xshift=-4cm] {Step 1\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 4.11 & 0.00\\
+$L_v$ & -5.26 & -6.16\\
+\midrule
+rej & ? & ?\\
+\bottomrule
+\end{tabular}
+};
+\node (n2) [c-rectangle2, below of=n1, xshift=-3cm] {Step 2\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & -5.26 & -6.16\\
+$L_v$ & -5.26 & -6.16\\
+\midrule
+rej & T & T\\
+\bottomrule
+\end{tabular}
+};
+\node (n3) [c-rectangle2, below of=n1, xshift=3cm] {Step 3\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 0.00 & -1.74\\
+$L_v$ & 0.00 ($a=0$) & -1.74\\
+\midrule
+rej & F & T\\
+\bottomrule
+\end{tabular}
+};
+\draw [arrow] (n0) -- node[anchor=east] {-(1)} (n1);
+\draw [arrow] (n1) -- node[anchor=east] {-(4)} (n2);
+\draw [arrow] (n1) -- node[anchor=west] {+(4)} (n3);
+\end{tikzpicture}
+%\caption{Illustration of State of the Art}
+%\label{fig:Illustration of State of the Art}
+\end{figure}
+
+
+
+
+\newpage
+\subsection{Keeping of the lowest statistic.}
+The first index in $\mathbf{D}$, $e=5$, determines the branching rule. We explore first the subspace $\mathbb{S}_{+5}$, where the index is kept.
+
+After 3 steps, $S$ is rejected in the subspace $\mathbb{S}_{+5}$. Subsequently, after 2 other steps, it is not rejected in $\mathbb{S}_{-5}$.
+
+In conclusion, $S$ is not rejected after 5 steps.
+
+\vspace{5mm}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance = 4cm]
+\node (n0) [c-rectangle2] {Start\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 4.11 & 0.00\\
+$L_v$ & -5.26 & -6.16\\
+\midrule
+rej & ? & ?\\
+\bottomrule
+\end{tabular}
+};
+\node (n1) [c-rectangle2, below of=n0, xshift=4cm] {Step 1\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & -5.26 & 0.00\\
+$L_v$ & -5.26 & -6.16\\
+\midrule
+rej & T & ?\\
+\bottomrule
+\end{tabular}
+};
+\node (n2) [c-rectangle2, below of=n1, xshift=2.5cm] {Step 2\\
+\begin{tabular}{cc}
+\toprule
+$v$ & 2\\
+\midrule
+$U_v$ & -6.16\\
+$L_v$ & -6.16\\
+\midrule
+rej & T \\
+\bottomrule
+\end{tabular}
+};
+\node (n3) [c-rectangle2, below of=n1, xshift=-2.5cm] {Step 3\\
+\begin{tabular}{cc}
+\toprule
+$v$ & 2 \\
+\midrule
+$U_v$ & -1.73\\
+$L_v$ & -1.73\\
+\midrule
+rej & T \\
+\bottomrule
+\end{tabular}
+};
+\node (n4) [c-rectangle2, below of=n0, xshift=-4cm] {Step 4\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 4.11 & -4.96\\
+$L_v$ & -5.87 & -4.96\\
+\midrule
+rej & ? & T\\
+\bottomrule
+\end{tabular}
+};
+\node (n5) [c-rectangle2, below of=n4, xshift=-2.5cm] {Step 5\\
+\begin{tabular}{cc}
+\toprule
+$v$ & 1 \\
+\midrule
+$U_v$ & 0.00 \\
+$L_v$ & 0.00 ($a=0$) \\
+\midrule
+rej & F\\
+\bottomrule
+\end{tabular}
+};
+\draw [arrow] (n0) -- node[anchor=west] {+(5)} (n1);
+\draw [arrow] (n1) -- node[anchor=west] {+(2)} (n2);
+\draw [arrow] (n1) -- node[anchor=east] {-(2)} (n3);
+\draw [arrow] (n0) -- node[anchor=east] {-(5)} (n4);
+\draw [arrow] (n4) -- node[anchor=east] {-(2)} (n5);
+\end{tikzpicture}
+\end{figure}
+
+
+
+
+
+\newpage
+\subsection{Removal of the lowest statistic.}
+The first index in $\mathbf{D}$, $e=5$, determines the branching rule. We explore first the subspace $\mathbb{S}_{-5}$, where the index is removed.
+
+$S$ is not rejected after 2 steps, where the subspaces $\mathbb{S}_{-5}$ and $\mathbb{S}_{-5,-2}$ are explored.
+
+\vspace{5mm}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance = 4cm]
+\node (n0) [c-rectangle2] {Start\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 4.11 & 0.00\\
+$L_v$ & -5.26 & -6.16\\
+\midrule
+rej & ? & ?\\
+\bottomrule
+\end{tabular}
+};
+\node (n1) [c-rectangle2, below of=n0, xshift=-4cm] {Step 1\\
+\begin{tabular}{ccc}
+\toprule
+$v$ & 1 & 2 \\
+\midrule
+$U_v$ & 4.11 & -4.96\\
+$L_v$ & -5.87 & -4.96\\
+\midrule
+rej & ? & T\\
+\bottomrule
+\end{tabular}
+};
+\node (n2) [c-rectangle2, below of=n1, xshift=-3cm] {Step 2\\
+\begin{tabular}{cc}
+\toprule
+$v$ & 1 \\
+\midrule
+$U_v$ & 0.00 \\
+$L_v$ & 0.00 ($a=0$) \\
+\midrule
+rej & F\\
+\bottomrule
+\end{tabular}
+};
+\draw [arrow] (n0) -- node[anchor=east] {-(5)} (n1);
+\draw [arrow] (n1) -- node[anchor=east] {-(2)} (n2);
+\end{tikzpicture}
+%\caption{Illustration of State of the Art}
+%\label{fig:Illustration of State of the Art}
+\end{figure}
+
+
+
+
 
 
 
