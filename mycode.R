@@ -45,18 +45,11 @@ Q <- function(X, k=ceiling(0.95*length(X))){
 
 # Internal function
 # Given a vector X and a value k, it computes the lower critical value L
-# if L<0, it returns TRUE (no non-rejection found)
-# if L=0, it returns TRUE with probability a
+# and returns TRUE if L<0 (no non-rejection found)
 
 Lcond <- function(X, k=ceiling(0.95*length(X)), aB=k){
   L <- Q(X, k)
-  
-  if(L==0){
-    a <- (aB - length(X[X > 0]))/length(X[X == 0])
-    c <- rbinom(n=1, size=1, prob=a)
-  }else{
-    c <- sign(L)==-1
-  }
+  c <- sign(L)==-1
   return(c)
 }
 
@@ -255,14 +248,13 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000){
     return(out)
   }
   
-  #out <- ctrp_bab(cb$indecisive, g$ds, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
-  # return(out)
+  out <- ctrp_bab(cb$indecisive, g$ds, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
   
   #out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive)
   
-  out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive,
-              "ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I,
-              "Dsum"=Dsum, "Rsum"=Rsum)
+  #out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive,
+              #"ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I,
+              #"Dsum"=Dsum, "Rsum"=Rsum)
  return(out)
   
 }

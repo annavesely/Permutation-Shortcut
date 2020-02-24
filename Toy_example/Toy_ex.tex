@@ -89,10 +89,8 @@ Assume that we want to test $S=\{3\}$ with significance level $\alpha=0.20$.
 
 
 
-\vspace{5mm}
+\vspace{10mm}
 \section{Shortcut}
-The supersets of $S$ have sizes $1+v$ with $v=0,\ldots,4$:
-
 \begin{table}[h!]
 \centering
 \resizebox{\textwidth}{!}{
@@ -105,18 +103,14 @@ v &   &  &  &  &  &  &  &  &  &  &  \\
 0 &  &  &  &  &  & $\mathbf{S=\{3\}}$ &  &  &  &  &  
 \end{tabular}
 }
+\caption{Supersets of $S=\{3\}$, having sizes $|V|=1+v$ with $v=0,\ldots,4$. The sets in bold are used to define the lower critical value $L_v$.}
 \end{table}
 
 We define
 \begin{itemize}
-\item $\mathbf{D}$, matrix of the centered test statistics in $F\setminus S$, where the indices appear in the order $(5,2,4,1)$ (since $g_5\leq g_2\leq g_3\leq g_4\leq g_1$);
+\item $\mathbf{D}$, matrix of the centered test statistics in $F\setminus S$, where the indices appear in the order $(5,2,4,1)$ (since $g_5\leq g_2\leq g_4\leq g_1$);
 \item $\mathbf{R}$, matrix obtained from $\mathbf{D}$ by sorting the elements within each row in decreasing order.
 \end{itemize}
-The lower and upper critical values, $L_v$ and $U_v$, are the ($1-\alpha$)-quantiles of
-\begin{align*}
-& \mathbf{d}_{\tilde{V}}=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{D}_i & \mathbf{u}_v=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{R}_i,
-\end{align*}
-respectively.
 
 \newpage
 \begin{table}[h!]
@@ -140,6 +134,11 @@ $(3)$ &  & $(5)$ & $(2)$ & $(4)$ & $(1)$ &  &  &  &  &  \\
 %}
 \end{table}
 
+The lower and upper critical values, $L_v$ and $U_v$, are the 8-th ordered statistics of
+\begin{align*}
+& \mathbf{d}_{\tilde{V}}=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{D}_i & \mathbf{u}_v=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{R}_i.
+\end{align*}
+
 Since the first column of $\mathbf{R}$ having no positive elements has index $w=3$, we start by computing $L_v$ for $v=0,1,2$.
 
 No non-rejection is found, and thus we proceed by examining $v>2$, until we find either a rejection or a negative $U_v$. Here $U_v$ becomes negative for $v=3$, hence the supersets with $v=3,4$ are automatically rejected.
@@ -148,7 +147,7 @@ Finally, we determine the indecisive values by looking at $U_v$. Here they are $
 
 \begin{figure}[h!]
 \centering
-\includegraphics[scale=0.6]{plot1.pdf}
+\includegraphics[scale=0.57]{plot1.pdf}
 \caption{Upper (red) and lower (blue) critical values and observed values (zero, black) by additional superset size $v$. The bounds for $v=4$ have not been computed in the analysis.}
 %\label{fig:bounds}
 \end{figure}
@@ -194,11 +193,9 @@ Since the outcome is still indecisive for both sizes $v=1,2$, the subspace is pa
 \end{tabular}
 \end{table}
 
-$S$ is rejected in both subspaces. We proceed by exploring $\mathbb{S}_{+1}$, where $S$ is not rejected. In particular, the superset $V=\{3,4\}$ is not rejected.
+Since $S$ is not rejected in $\mathbb{S}_{-1,+4}$, it is not rejected in the total spece after 3 steps.
 
-In conclusion, $S$ is not rejected after 3 steps.
-
-\vspace{5mm}
+\vspace{10mm}
 
 \begin{figure}[h!]
 \centering
@@ -266,11 +263,9 @@ rej & F & T\\
 \subsection{Keeping of the lowest statistic.}
 The first index in $\mathbf{D}$, $e=5$, determines the branching rule. We explore first the subspace $\mathbb{S}_{+5}$, where the index is kept.
 
-After 3 steps, $S$ is rejected in the subspace $\mathbb{S}_{+5}$. Subsequently, after 2 other steps, it is not rejected in $\mathbb{S}_{-5}$.
+After 3 steps, $S$ is rejected in the subspace $\mathbb{S}_{+5}$. Subsequently, after 2 other steps, it is not rejected in $\mathbb{S}_{-5}$. In conclusion, it is not rejected after 5 steps.
 
-In conclusion, $S$ is not rejected after 5 steps.
-
-\vspace{5mm}
+\vspace{10mm}
 
 \begin{figure}[h!]
 \centering
@@ -365,7 +360,7 @@ The first index in $\mathbf{D}$, $e=5$, determines the branching rule. We explor
 
 $S$ is not rejected after 2 steps, where the subspaces $\mathbb{S}_{-5}$ and $\mathbb{S}_{-5,-2}$ are explored.
 
-\vspace{5mm}
+\vspace{10mm}
 
 \begin{figure}[h!]
 \centering

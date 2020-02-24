@@ -54,19 +54,18 @@ gt <- function(n, f, B, beta0, beta){
 G <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
 c <- ctrp_set(G)
 
-D <- c$D
-R <- c$R
-I <- c$I
 
-
-
-#G <- gt(n=20, f=10, B=400, beta0=0, beta=c(20,0,5,0,0,0,0,0,0,0))
-#c <- ctrp_set(G)
 
 # set under testing
 S <- c(3)
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20)
 te
+
+
+#G <- gt(n=20, f=10, B=400, beta0=0, beta=c(20,0,5,0,0,0,0,0,0,0))
+#c <- ctrp_set(G)
+
+
 
 ds <- te$ds
 Rsum_0 <- te$Rsum
