@@ -9,7 +9,7 @@ set.seed(myseed)
 gen_y0 <- function(eta){
   set.seed(myseed)
   p <- exp(eta)/(1+exp(eta))
-  y <- rbinom(n=1, size=1, prob=p)
+  y <- rbinom(1, 1, prob=p)
   return(y)
 }
 
@@ -54,16 +54,86 @@ gt <- function(n, f, B, beta0, beta){
 G <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
 c <- ctrp_set(G)
 
-
-
 # set under testing
 S <- c(3)
-te <- ctrp_test(S, c$D, c$R, c$I, 0.20)
+te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20)
 te
 
 
-#G <- gt(n=20, f=10, B=400, beta0=0, beta=c(20,0,5,0,0,0,0,0,0,0))
-#c <- ctrp_set(G)
+
+
+
+### -------------------------------------- ###
+
+
+mycheck <- function(S, D, R, I, alpha, n_max=20){
+  te1 <- ctrp_test1(S, c$D, c$R, c$I, 0.20, n_max)
+  te2 <- ctrp_test2(S, c$D, c$R, c$I, 0.20, n_max)
+  te3 <- ctrp_test3(S, c$D, c$R, c$I, 0.20, n_max)
+  cond <- (te1$non_rej == te2$non_rej & te2$non_rej == te3$non_rej)
+  babs <- c(te1$BAB, te2$BAB, te3$BAB)
+  out <- list("cond"=cond, "non_rej"=te1$non_rej, "BABs"=babs)
+  return(out)
+}
+
+
+G <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
+c <- ctrp_set(G)
+
+mycheck(3, c$D, c$R, c$I, 0.20, 20)
+mycheck(1, c$D, c$R, c$I, 0.20, 20)
+mycheck(c(3,4), c$D, c$R, c$I, 0.20, 20)
+mycheck(c(1,4), c$D, c$R, c$I, 0.20, 20)
+mycheck(c(1,2,3,4), c$D, c$R, c$I, 0.20, 20)
+mycheck(c(1,2,3,4,5), c$D, c$R, c$I, 0.20, 20)
+
+G <- gt(n=20, f=10, B=400, beta0=0, beta=c(20,0,5,0,0,0,0,0,0,0))
+c <- ctrp_set(G)
+mycheck(3, c$D, c$R, c$I, 0.20, 20)
+mycheck(1, c$D, c$R, c$I, 0.20, 50) # ERROR
+mycheck(c(3,4), c$D, c$R, c$I, 0.20, 20)
+mycheck(c(1,4), c$D, c$R, c$I, 0.20, 20)
+mycheck(c(1,2,3,4), c$D, c$R, c$I, 0.20, 20)
+mycheck(c(1,2,3,4,5), c$D, c$R, c$I, 0.20, 20)
+
+#G <- gt(n=20, f=5, B=100, beta0=0, beta=c(100,1,0,0,0))
+
+
+# ERROR
+# il 3 è sbagliato
+mycheck(1, c$D, c$R, c$I, 0.20, 50)
+te1 <- ctrp_test1(1, c$D, c$R, c$I, 0.20, 50)
+te2 <- ctrp_test2(1, c$D, c$R, c$I, 0.20, 50)
+te3 <- ctrp_test3(1, c$D, c$R, c$I, 0.20, 50)
+
+te <- ctrp_test(1, c$D, c$R, c$I, 0.20, 50)
+S <- 1
+ds <- te$ds
+Rsum_0 <- te$Rsum
+Dsum_0 <- te$Dsum
+I_0 <- te$I
+D_0 <- te$D
+R_0 <- te$R
+I_0 <- te$I
+indecisive_0 <- te$indecisive
+alpha <- 0.2
+B <- nrow(D_0)
+m <- ncol(D_0)
+s <- length(S)
+f <- m+s
+k <- ceiling((1-alpha)*B)
+n_max <- 50
+
+# potrebbe essere il 3 ad avere problemi?
+# o l'1 e il 2?
+
+
+
+
+
+
+
+
 
 
 
@@ -76,12 +146,12 @@ R_0 <- te$R
 I_0 <- te$I
 indecisive_0 <- te$indecisive
 alpha <- 0.2
-k <- 8
-m <- 4
-f <- 5
-s <- 1
-B <- 10
-aB <- alpha*B
+B <- nrow(D_0)
+m <- ncol(D_0)
+s <- length(S)
+f <- m+s
+k <- ceiling((1-alpha)*B)
+n_max <- 20
 
 
 # CASE 1
@@ -128,7 +198,7 @@ a # 0 - > not reject
 
 
 
-# CASE 2
+# CASE 3
 f <- function(D, R, I){
   m <- ncol(D)
   B <- nrow(D)
@@ -168,7 +238,7 @@ a #0 - > not reject
 
 
 
-# CASE 3
+# CASE 2
 # step 1: +5
 P <- f(D_0, R_0, I_0)
 Dsum <- t(apply(cbind(ds + P$A,P$D),1,cumsum))
@@ -188,8 +258,17 @@ Dsum <- t(apply(cbind(ds + A1,P$D),1,cumsum))
 Rsum <- t(apply(cbind(ds + A1,P$R),1,cumsum))
 Q(Rsum[,2],k) # upper bounds
 Q(Dsum[,2],k) # lower bounds
-# from above: +5...
-# from above: +5...
-
+# step 4: -5
+P <- f(D_0, R_0, I_0)
+Dsum <- t(apply(cbind(ds,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds,P$R),1,cumsum))
+c(Q(Rsum[,2],k), Q(Rsum[,3],k)) # upper bounds
+c(Q(Dsum[,2],k), Q(Dsum[,3],k)) # lower bounds
+# step 5: -5, +2
+P <- f(P$D, P$R, P$I)
+Dsum <- t(apply(cbind(ds + P$A,P$D),1,cumsum))
+Rsum <- t(apply(cbind(ds + P$A,P$R),1,cumsum))
+Q(Rsum[,1],k) # upper bounds
+Q(Dsum[,1],k) # lower bounds
 
 

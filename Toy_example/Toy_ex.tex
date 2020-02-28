@@ -263,7 +263,7 @@ rej & F & T\\
 \subsection{Keeping of the lowest statistic.}
 The first index in $\mathbf{D}$, $e=5$, determines the branching rule. We explore first the subspace $\mathbb{S}_{+5}$, where the index is kept.
 
-After 3 steps, $S$ is rejected in the subspace $\mathbb{S}_{+5}$. Subsequently, after 2 other steps, it is not rejected in $\mathbb{S}_{-5}$. In conclusion, it is not rejected after 5 steps.
+After 3 steps, $S$ is rejected in the subspace $\mathbb{S}_{+5}$. Subsequently, after 3 other steps, it is not rejected in $\mathbb{S}_{-5}$. In conclusion, it is not rejected after 6 steps.
 
 \vspace{10mm}
 
@@ -282,7 +282,7 @@ rej & ? & ?\\
 \bottomrule
 \end{tabular}
 };
-\node (n1) [c-rectangle2, below of=n0, xshift=4cm] {Step 1\\
+\node (n1) [c-rectangle2, below of=n0, xshift=4.4cm] {Step 1\\
 \begin{tabular}{ccc}
 \toprule
 $v$ & 1 & 2 \\
@@ -294,7 +294,7 @@ rej & T & ?\\
 \bottomrule
 \end{tabular}
 };
-\node (n2) [c-rectangle2, below of=n1, xshift=2.5cm] {Step 2\\
+\node (n2) [c-rectangle2, below of=n1, xshift=2.2cm] {Step 2\\
 \begin{tabular}{cc}
 \toprule
 $v$ & 2\\
@@ -306,7 +306,7 @@ rej & T \\
 \bottomrule
 \end{tabular}
 };
-\node (n3) [c-rectangle2, below of=n1, xshift=-2.5cm] {Step 3\\
+\node (n3) [c-rectangle2, below of=n1, xshift=-2.2cm] {Step 3\\
 \begin{tabular}{cc}
 \toprule
 $v$ & 2 \\
@@ -318,7 +318,7 @@ rej & T \\
 \bottomrule
 \end{tabular}
 };
-\node (n4) [c-rectangle2, below of=n0, xshift=-4cm] {Step 4\\
+\node (n4) [c-rectangle2, below of=n0, xshift=-4.4cm] {Step 4\\
 \begin{tabular}{ccc}
 \toprule
 $v$ & 1 & 2 \\
@@ -330,7 +330,19 @@ rej & ? & T\\
 \bottomrule
 \end{tabular}
 };
-\node (n5) [c-rectangle2, below of=n4, xshift=-2.5cm] {Step 5\\
+\node (n5) [c-rectangle2, below of=n4, xshift=2.2cm] {Step 5\\
+\begin{tabular}{cc}
+\toprule
+$v$ & 1 \\
+\midrule
+$U_v$ & -5.87 \\
+$L_v$ & -5.87 \\
+\midrule
+rej & T\\
+\bottomrule
+\end{tabular}
+};
+\node (n6) [c-rectangle2, below of=n4, xshift=-2.2cm] {Step 6\\
 \begin{tabular}{cc}
 \toprule
 $v$ & 1 \\
@@ -346,7 +358,8 @@ rej & F\\
 \draw [arrow] (n1) -- node[anchor=west] {+(2)} (n2);
 \draw [arrow] (n1) -- node[anchor=east] {-(2)} (n3);
 \draw [arrow] (n0) -- node[anchor=east] {-(5)} (n4);
-\draw [arrow] (n4) -- node[anchor=east] {-(2)} (n5);
+\draw [arrow] (n4) -- node[anchor=west] {+(2)} (n5);
+\draw [arrow] (n4) -- node[anchor=east] {-(2)} (n6);
 \end{tikzpicture}
 \end{figure}
 

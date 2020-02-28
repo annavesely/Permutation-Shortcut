@@ -1,7 +1,6 @@
 
 ### CASE 1: REMOVAL OF THE HIGHEST STATISTIC ###
 
-
 # Internal function - Branch and Bound
 # Used when removing the highest statistic
 # Given D_0 (initial matrix) and
@@ -11,7 +10,7 @@
 # and removes the corresponding elements from R, I, Dsum and Rsum
 # (d_kept does not vary)
 
-update_sets1 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0), B=nrow(D_0)){
+us1_1 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0), B=nrow(D_0)){
   
   # number of columns of I_new
   #(ncol(Rsum_new)=ncol(I)=N+1, ncol(Rsum_prev)=N+2)
@@ -48,10 +47,10 @@ update_sets1 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0), B=nrow
 # d_kept, Dsum, Rsum at the previous step with the same level lev
 # (where the level is the number of indices that have already been considered)
 # the function considers the index of the lev-th highest statistic
-# and adds the corresponding to Dsum, Rsum and d_kept
+# and adds the corresponding elements to Dsum, Rsum and d_kept
 # (R and I do not vary)
 
-update_sets2 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0)){
+us2_1 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0)){
   
   #index to be considered
   N <- m-lev
@@ -70,7 +69,7 @@ update_sets2 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0)){
 
 # Internal function - Branch and Bound
 # Used when keeping the highest statistics at a lower level than the previous step
-# Given ds, I_0, R_0 and Dsum_0 (initial matrices)
+# Given I_0, R_0 and Dsum_0 (initial matrices)
 # the test statistic d_kept at level lev
 # (where the level is the number of indices that have already been considered)
 # the function considers the indices of the lev highest statistics,
@@ -78,7 +77,7 @@ update_sets2 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0)){
 # removes the corresponding elements from I and R
 # and finally computes the cumulative sums Rsum
 
-update_sets3 <- function(lev, d_kept, ds, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=nrow(R_0)){
+us3_1 <- function(lev, d_kept, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=nrow(R_0)){
   
   # new index to be considered
   N <- m-lev
@@ -99,7 +98,7 @@ update_sets3 <- function(lev, d_kept, ds, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=
     R_new[x,] <- R_0[x,-i]
   }
   
-  Rsum_new <- t(apply(cbind(ds+d_kept, R_new), 1, cumsum))
+  Rsum_new <- t(apply(cbind(Dsum_0[,1] + d_kept, R_new), 1, cumsum))
   
   out <- list("R"=R_new, "I"=I_new, "Dsum"=Dsum_new, "Rsum"=Rsum_new, "d_kept"=d_kept)
   return(out)
@@ -108,7 +107,7 @@ update_sets3 <- function(lev, d_kept, ds, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=
 
 
 # Internal function - Branch and Bound
-# Given the initial matrices ds, D_0, R_0, I_0, Dsum_0 and Rsum_0
+# Given the initial matrices D_0, R_0, I_0, Dsum_0 and Rsum_0
 # as defined in ctrp_test
 # the function partitions the total space according to the highest observed statistic
 # Firstly, it removes as many indices as it can until a certain rejection is found
@@ -119,7 +118,7 @@ update_sets3 <- function(lev, d_kept, ds, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=
 # makes n_max steps without a decisive outcome)
 # and BAB, the number of steps made.
 
-ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
+ctrp_bab1 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
                      k=ceiling(0.95*nrow(R)), m=ncol(D_0), B=nrow(D_0), n_max=10000){
   
   list_lev <- list(0)
@@ -139,22 +138,22 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     while(cond & BAB<n_max){
       BAB <- BAB + 1
       lev <- lev + 1
-      us <- update_sets1(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m, B)
+      us <- us1_1(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m, B)
       
       indecisive <- compute_bounds_fast(tail(list_ind,1)[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
       cond <- length(indecisive)>0
       
       if(cond){
         list_lev <- append(list_lev, lev)
-        list_kept <- append(list_kept, us$d_kept)
+        list_kept <- append(list_kept, list(us$d_kept))
         list_ind <- append(list_ind, list(indecisive))
       }
     }
     
     # then we explore the branch right next to it
     BAB <- BAB + 1
-    us <- update_sets2(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m)
-    cb <- compute_bounds(list_ind[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
+    us <- us2_1(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m)
+    cb <- compute_bounds(tail(list_ind,1)[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
     if(cb$non_rej){
       out <- list("non_rej"=T, "BAB"=BAB)
       return(out)
@@ -166,6 +165,7 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     list_lev <- list_lev[-L]
     list_kept <- list_kept[-L]
     list_ind <- list_ind[-L]
+    L <- L-1
     
     cond <- length(cb$indecisive)>0
     
@@ -174,8 +174,8 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     while(!cond & L>0 & BAB<n_max){
       BAB <- BAB + 1
       lev <- tail(list_lev,1)[[1]] + 1
-      us <- update_sets3(lev, list_kept[[1]], ds, D_0, R_0, I_0, Dsum_0, m, B)
-      cb <- compute_bounds(list_ind[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
+      us <- us3_1(lev, tail(list_kept,1)[[1]], D_0, R_0, I_0, Dsum_0, m, B)
+      cb <- compute_bounds(tail(list_ind,1)[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
       
       if(cb$non_rej){
         out <- list("non_rej"=T, "BAB"=BAB)
@@ -188,6 +188,7 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
       list_lev <- list_lev[-L]
       list_kept <- list_kept[-L]
       list_ind <- list_ind[-L]
+      L <- L-1
       
       cond <- length(cb$indecisive)>0
     }
@@ -196,8 +197,8 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
     # (otherwise it means that the list has become empty without finding such a set)
     if(cond){
       list_lev <- append(list_lev, lev)
-      list_kept <- append(list_kept, us$d_kept)
-      list_ind <- append(list_ind, list(indecisive))
+      list_kept <- append(list_kept, list(us$d_kept))
+      list_ind <- append(list_ind, list(cb$indecisive))
     }
   }
   
@@ -207,6 +208,51 @@ ctrp_bab <- function(indecisive_0, ds, D_0, R_0, I_0, Dsum_0, Rsum_0,
   }else{
     out <- list("non_rej"=F, "BAB"=BAB)
   }
+  return(out)
+}
+
+
+
+
+# Given D, R, I as given by ctrp_set,
+# a vector of indices S, the significance level alpha
+# and the maximum number n_max of BAB iterations (0 if no BAB),
+# the function tests S and returns:
+# non_rej, TRUE if a non-rejection has been found,
+# indecisive, vector of indecisive sizes (not null if the BAB iterations stop
+# before a decisive outcome)
+# BAB, the number of BAB iterations
+
+ctrp_test1 <- function(S, D, R, I, alpha=0.05, n_max=10000){
+  f <- ncol(D)
+  B <- nrow(D)
+  s <- length(S)
+  m <- f-s
+  k <- ceiling((1-alpha)*B)
+  
+  # if S=F:
+  if(m==0){
+    # lower and upper bounds (equal)
+    low <- Lcond(rowSums(D), k)
+    out <- list("non_rej"=!low, "BAB"=0)
+    return(out)
+  }
+  
+  g <- gen_sub(S, D, R, I, f, m, B, s)
+  
+  Dsum <- t(apply(cbind(g$ds, g$D), 1, cumsum))
+  Rsum <- t(apply(cbind(g$ds, g$R), 1, cumsum))
+  indecisive <- (0:m)
+  
+  cb <- compute_bounds(indecisive, g$R, Dsum, Rsum, k, m)
+  
+  # if there is a non-rejection or there are no indecisives
+  if(cb$non_rej | length(cb$indecisive)==0){
+    out <- list("non_rej"=cb$non_rej, "BAB"=0)
+    return(out)
+  }
+  
+  out <- ctrp_bab1(cb$indecisive, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
   return(out)
 }
 

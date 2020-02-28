@@ -1,107 +1,48 @@
-
-### CASE 3: REMOVAL OF THE LOWEST STATISTIC ###
-
-
-# Internal function - Branch and Bound
-# Used when removing the lowest statistic
-# Given D_0 (initial matrix) and
-# d_kept, R, I, Dsum, Rsum at the previous step with level lev-1
-# (where the level is the number of indices that have already been considered)
-# the function considers the index of the lev-th lowest statistic
-# and removes the corresponding elements from R, I, Dsum and Rsum
-# (d_kept does not vary)
-
-us1_3 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0), B=nrow(D_0)){
-  
-  # number of columns of I_new
-  #(ncol(Rsum_new)=ncol(I)=N+1, ncol(Rsum_prev)=N+2)
-  N <- m-lev
-  
-  # index to be considered
-  r <- I[1,N+1]
-  
-  I_new <- matrix(rep(NA, B*N), ncol=N)
-  R_new <- I_new
-  Rsum_new <- matrix(rep(NA, B*(N+1)), ncol=N+1)
-  Dsum_new <- Dsum[,2:(N+2)] - D_0[,lev]
-  
-  for(x in seq(B)){
-    i <- match(r, I[x,])
-    I_new[x,] <- I[x,-i]
-    R_new[x,] <- R[x,-i]
-    Rsum_new[x,] <- Rsum[x,-i]
-    if(i<N+2){
-      Rsum_new[x, i:(N+1)] <- Rsum_new[x, i:(N+1)] - D_0[x,lev]
-    }
-  }
-  
-  out <- list("R"=R_new, "I"=I_new, "Dsum"=Dsum_new, "Rsum"=Rsum_new, "d_kept"=d_kept)
-  return(out)
-}
-
+# ERROR CHECK
 
 
 
 # Internal function - Branch and Bound
-# Used when keeping the lowest statistic at the same level of the previous step
-# Given D_0 (initial matrix) and
-# d_kept, Dsum, Rsum at the previous step with the same level lev
-# (where the level is the number of indices that have already been considered)
-# the function considers the index of the lev-th lowest statistic
-# and adds the corresponding elements to Dsum, Rsum and d_kept
-# (R and I do not vary)
-
-us2_3 <- function(lev, d_kept, D_0, R, I, Dsum, Rsum, m=ncol(D_0)){
-  
-  #index to be considered
-  N <- m-lev
-  A <- D_0[,lev]
-  
-  d_kept <- d_kept + A
-  Dsum_new <- Dsum + A
-  Rsum_new <- Rsum + A
-  
-  out <- list("R"=R, "I"=I, "Dsum"=Dsum_new, "Rsum"=Rsum_new, "d_kept"=d_kept)
-  return(out)
-}
-
-
-
-
-# Internal function - Branch and Bound
-# Used when keeping the lowest statistics at a lower level than the previous step
+# Used when keeping the highest statistics at a lower level than the previous step
 # Given I_0, R_0 and Dsum_0 (initial matrices)
 # the test statistic d_kept at level lev
 # (where the level is the number of indices that have already been considered)
-# the function considers the indices of the lev lowest statistics,
+# the function considers the indices of the lev highest statistics,
 # adds the corresponding elements to d_kept and Dsum, and
 # removes the corresponding elements from I and R
 # and finally computes the cumulative sums Rsum
 
-us3_3 <- function(lev, d_kept, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=nrow(R_0)){
+us_check <- function(lev, d_kept, rem=T, D_0, R_0, I_0, m=ncol(R_0), B=nrow(R_0)){
   
   # new index to be considered
   N <- m-lev
-  A <- D_0[,lev]
   
-  d_kept <- d_kept + A
-  Dsum_new <- Dsum_0[,(lev+1):(m+1)] - Dsum_0[,lev+1] + Dsum_0[,1] + d_kept
+  if(!rem){
+    A <- D_0[,N+1]
+    d_kept <- d_kept + A
+  }
+  
   
   #vector of the indices to be considered
-  r <- I_0[1,(N+1):m]
+  r <- I_0[1,1:lev]
   
   I_new <- matrix(rep(NA, B*N), ncol=N)
   R_new <- I_new
+  D_new <- I_new
   
   for(x in seq(B)){
     i <- match(r, I_0[x,])
+    iD <- N-i+2
     I_new[x,] <- I_0[x,-i]
     R_new[x,] <- R_0[x,-i]
+    D_new[x,] <- D_0[x,-iD]
   }
   
-  Rsum_new <- t(apply(cbind(Dsum_0[,1] + d_kept, R_new), 1, cumsum))
+  first_col <- Dsum_0[,1] + d_kept
   
-  out <- list("R"=R_new, "I"=I_new, "Dsum"=Dsum_new, "Rsum"=Rsum_new, "d_kept"=d_kept)
+  Rsum_new <- t(apply(first_col, R_new), 1, cumsum)
+  
+  out <- list("R"=R_new, "Dsum"=Dsum_new, "Rsum"=Rsum_new, "d_kept"=d_kept)
   return(out)
 }
 
@@ -110,7 +51,7 @@ us3_3 <- function(lev, d_kept, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=nrow(R_0)){
 # Internal function - Branch and Bound
 # Given the initial matrices D_0, R_0, I_0, Dsum_0 and Rsum_0
 # as defined in ctrp_test
-# the function partitions the total space according to the lowest observed statistic
+# the function partitions the total space according to the highest observed statistic
 # Firstly, it removes as many indices as it can until a certain rejection is found
 # Then it explores the node where the last (lev-th) statistic is kept instead than removed
 # If it is certainly rejected, it proceeds by adding another statistic ((lev-1)-th)
@@ -119,8 +60,8 @@ us3_3 <- function(lev, d_kept, D_0, R_0, I_0, Dsum_0, m=ncol(R_0), B=nrow(R_0)){
 # makes n_max steps without a decisive outcome)
 # and BAB, the number of steps made.
 
-ctrp_bab3 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
-                     k=ceiling(0.95*nrow(R)), m=ncol(D_0), B=nrow(D_0), n_max=10000){
+ctrp_bab_check <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
+                      k=ceiling(0.95*nrow(R)), m=ncol(D_0), B=nrow(D_0), n_max=10000){
   
   list_lev <- list(0)
   list_kept <- list(0)
@@ -131,34 +72,33 @@ ctrp_bab3 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
   non_rej <- F
   cond <- T
   
-  us <- list("R"=R_0, "I"=I_0, "Dsum"=Dsum_0, "Rsum"=Rsum_0, "d_kept"=0)
+  us <- list("R"=R_0, "Dsum"=Dsum_0, "Rsum"=Rsum_0, "d_kept"=0)
   
   while(length(list_lev)>0 & BAB<n_max){
     
-    # we keep removing the lowest statistic until we can close a branch
+    # we keep removing the highest statistic until we can close a branch
     while(cond & BAB<n_max){
       BAB <- BAB + 1
       lev <- lev + 1
-      us <- us1_3(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m, B)
-      
-      cb <- compute_bounds(tail(list_ind,1)[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
-      if(cb$non_rej){
-        out <- list("non_rej"=T, "BAB"=BAB)
-        return(out)
-      }
-      cond <- length(cb$indecisive)>0
+      us <- us_check(lev, us$d_kept, rem=T, D_0, R_0, I_0, m, B)
+      indecisive <- compute_bounds_fast(tail(list_ind,1)[[1]], us$R, us$Dsum, us$Rsum, k, m-lev)
+      cond <- length(indecisive)>0
       
       if(cond){
         list_lev <- append(list_lev, lev)
-        list_kept <- append(list_kept, us$d_kept)
-        list_ind <- append(list_ind, list(cb$indecisive))
+        list_kept <- append(list_kept, list(us$d_kept))
+        list_ind <- append(list_ind, list(indecisive))
       }
     }
     
     # then we explore the branch right next to it
     BAB <- BAB + 1
-    us <- us2_3(lev, us$d_kept, D_0, us$R, us$I, us$Dsum, us$Rsum, m)
-    indecisive <- compute_bounds_fast(tail(list_ind,1)[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
+    us <- us_check(lev, us$d_kept, rem=F, D_0, R_0, I_0, m, B)
+    cb <- compute_bounds(tail(list_ind,1)[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
+    if(cb$non_rej){
+      out <- list("non_rej"=T, "BAB"=BAB)
+      return(out)
+    }
     
     # remove previous element from list, since now that the right branch has been
     # generated, it has been completely analyzed
@@ -168,16 +108,20 @@ ctrp_bab3 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
     list_ind <- list_ind[-L]
     L <- L-1
     
-    cond <- length(indecisive)>0
+    cond <- length(cb$indecisive)>0
     
     # if the set is not indecisive, we take the next element from the list, and add
     # the lev-th statistic
     while(!cond & L>0 & BAB<n_max){
       BAB <- BAB + 1
       lev <- tail(list_lev,1)[[1]] + 1
-      us <- us3_3(lev, tail(list_kept,1)[[1]], D_0, R_0, I_0, Dsum_0, m, B)
-      indecisive <- compute_bounds_fast(tail(list_ind,1)[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
+      us <- us_check(lev, tail(list_kept,1)[[1]], rem=F, D_0, R_0, I_0, m, B)
+      cb <- compute_bounds(tail(list_ind,1)[[1]]-1, us$R, us$Dsum, us$Rsum, k, m-lev)
       
+      if(cb$non_rej){
+        out <- list("non_rej"=T, "BAB"=BAB)
+        return(out)
+      }
       
       # remove previous element from list, since now that the right branch has been
       # generated, it has been completely analyzed
@@ -187,7 +131,7 @@ ctrp_bab3 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
       list_ind <- list_ind[-L]
       L <- L-1
       
-      cond <- length(indecisive)>0
+      cond <- length(cb$indecisive)>0
     }
     
     # if one indecisive set has been found, it is added
@@ -195,7 +139,7 @@ ctrp_bab3 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
     if(cond){
       list_lev <- append(list_lev, lev)
       list_kept <- append(list_kept, list(us$d_kept))
-      list_ind <- append(list_ind, list(indecisive))
+      list_ind <- append(list_ind, list(cb$indecisive))
     }
   }
   
@@ -220,7 +164,7 @@ ctrp_bab3 <- function(indecisive_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
 # before a decisive outcome)
 # BAB, the number of BAB iterations
 
-ctrp_test3 <- function(S, D, R, I, alpha=0.05, n_max=10000){
+ctrp_test_check <- function(S, D, R, I, alpha=0.05, n_max=10000){
   f <- ncol(D)
   B <- nrow(D)
   s <- length(S)
@@ -249,12 +193,8 @@ ctrp_test3 <- function(S, D, R, I, alpha=0.05, n_max=10000){
     return(out)
   }
   
-  out <- ctrp_bab3(cb$indecisive, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
+  out <- ctrp_bab_check(cb$indecisive, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
   return(out)
 }
-
-
-
-
 
 

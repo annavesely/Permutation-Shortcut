@@ -47,7 +47,7 @@ Q <- function(X, k=ceiling(0.95*length(X))){
 # Given a vector X and a value k, it computes the lower critical value L
 # and returns TRUE if L<0 (no non-rejection found)
 
-Lcond <- function(X, k=ceiling(0.95*length(X)), aB=k){
+Lcond <- function(X, k=ceiling(0.95*length(X))){
   L <- Q(X, k)
   c <- sign(L)==-1
   return(c)
@@ -95,7 +95,7 @@ gen_sub <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=len
     ds <- rowSums(D[,i_D])
   }
   
-  # if m=1, we test only S and F, so R and I are not necessary
+  # if m=1, then Rc=Dc and Ic are vectors
   if(m==1){
     Ic <- rep(I[1,-i], B)
     Rc <- Dc
@@ -130,11 +130,16 @@ compute_bounds <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m
   
   h <- 1
   v <- indecisive[1]
-  low <- Lcond(Dsum[,v+1], k, aB)
+  low <- Lcond(Dsum[,v+1], k)
   up[1] <- Ucond(Rsum[,v+1], k)
   
   # first column in R with no positive element
-  j <- Find(function(x) sign(max(R[,x]))<1 , seq(m))
+  # (if m=1, then R is a vector)
+  if(m==1){
+    j <- Find(function(x) sign(max(R))<1 , 1)
+  }else{
+    j <- Find(function(x) sign(max(R[,x]))<1 , seq(m))
+  }
   
   # if there is no such column
   if(length(j)==0){
@@ -145,7 +150,7 @@ compute_bounds <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m
   while(low & v<j-1 & h<H){
     h <- h+1
     v <- indecisive[h]
-    low <- Lcond(Dsum[,v+1], k, aB)
+    low <- Lcond(Dsum[,v+1], k)
     up[h] <- Ucond(Rsum[,v+1], k)
   }
   
@@ -153,7 +158,7 @@ compute_bounds <- function(indecisive, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m
   while(low & up[h] & h<H){
     h <- h+1
     v <- indecisive[h]
-    low <- Lcond(Dsum[,v+1], k, aB)
+    low <- Lcond(Dsum[,v+1], k)
     up[h] <- Ucond(Rsum[,v+1], k)
   }
 
@@ -223,13 +228,12 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000){
   B <- nrow(D)
   s <- length(S)
   m <- f-s
-  aB <- alpha*B
   k <- ceiling((1-alpha)*B)
   
   # if S=F:
   if(m==0){
     # lower and upper bounds (equal)
-    low <- Lcond(rowSums(D), k, aB)
+    low <- Lcond(rowSums(D), k)
     out <- list("non_rej"=!low, "BAB"=0)
     return(out)
   }
@@ -242,19 +246,17 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000){
 
   cb <- compute_bounds(indecisive, g$R, Dsum, Rsum, k, m)
   
-  # if there are no indecisives
-  if(length(cb$indecisive)==0){
+  # if there is a non-rejection or there are no indecisives
+  if(cb$non_rej | length(cb$indecisive)==0){
     out <- list("non_rej"=cb$non_rej, "BAB"=0)
     return(out)
   }
   
-  out <- ctrp_bab(cb$indecisive, g$ds, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
+  #out <- ctrp_bab(cb$indecisive, g$D, g$R, g$I, Dsum, Rsum, k, m, B, n_max)
   
   #out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive)
   
-  #out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive,
-              #"ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I,
-              #"Dsum"=Dsum, "Rsum"=Rsum)
+  out <- list("non_rej"=cb$non_rej, "indecisive"=cb$indecisive, "ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I, "Dsum"=Dsum, "Rsum"=Rsum)
  return(out)
 }
 
