@@ -40,21 +40,30 @@ generate_S <- function(f, s_size, s_active){
 }
 
 
-
+f <- 1000
+perc <- 0.1
+B <- 10
+s_size <- 0.2
+s_active <- 0.5
+alpha <- 0.2
+m <- 10
+sd <- 5
+n_max <- 200
+n <- f
 
 get_time0 <- function(f_int=c(10,100,500,1000), perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
                      B_int=c(10,100,500,1000), s_size_int=c(0.01,0.1,0.2,0.5,0.8),
                      s_active_int=perc_int, alpha_int=c(0.05,0.2),
-                     m=10, sd=5, n=20){
+                     m=10, sd=5, n_max=1000){
   
   set.seed(myseed)
   L <- length(f_int) * length(perc_int) * length(B_int) * length(s_size_int) *
     length(s_active_int) * length(alpha_int)
-  M <- matrix(rep(NA, 8*L), ncol=8)
-  colnames(M) <- c("f", "perc", "B", "s_size", "s_active", "alpha", "BAB", "time")
+  M <- matrix(rep(NA, 9*L), ncol=9)
+  colnames(M) <- c("f", "perc", "B", "s_size", "s_active", "alpha", "non_rej", "BAB", "time")
   
   fmax <- max(f_int)
-  beta_active <- rnorm(fmax, m1, sd1)
+  beta_active <- rnorm(fmax, m, sd)
   beta_inactive <- rep(0, fmax)
   
   i <- 0
@@ -65,7 +74,7 @@ get_time0 <- function(f_int=c(10,100,500,1000), perc_int=c(0, 0.01,0.1,0.2,0.5,0
       beta <- generate_beta(f, perc, beta_active, beta_inactive)
       
       for(B in B_int){
-        G <- gt(n, f, B, 0, beta)
+        G <- gt(f, f, B, 0, beta)
         c <- ctrp_set(G)
         
         for(s_size in s_size_int){
@@ -75,8 +84,9 @@ get_time0 <- function(f_int=c(10,100,500,1000), perc_int=c(0, 0.01,0.1,0.2,0.5,0
             
             for(alpha in alpha_int){
               i <- i+1
-              t <- system.time(te <- ctrp_test1(S, c$D, c$R, c$I, alpha))[3]
-              M[i,] <- c(f, perc, B, s_size, s_active, alpha, te$BAB, t)
+              t <- system.time(te <- ctrp_test(S, c$D, c$R, c$I, alpha, n_max, from_low=T, first_rem=T))[3]
+              nr <- ifelse(length(te$non_rej)==0, 0, ifelse(te$non_rej, 1, -1))
+              M[i,] <- c(f, perc, B, s_size, s_active, alpha, nr, te$BAB, t)
             }
           }
         }
@@ -84,28 +94,35 @@ get_time0 <- function(f_int=c(10,100,500,1000), perc_int=c(0, 0.01,0.1,0.2,0.5,0
     }
   }
   M <- M[(1:i),]
-  M <- M[M[,7]>0,]
-  out <- list("M"=M, "beta_active"=beta_active, "beta_inactive"=beta_inactive, "n"=n)
+  M <- M[M[,8]>0,]
+  out <- list("M"=M, "beta_active"=beta_active, "beta_inactive"=beta_inactive)
   return(out)
 }
 
 
+mytime <- get_time0(f_int=c(10), perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
+                    B_int=c(100), s_size_int=c(0.01,0.1,0.2,0.5,0.8),
+                    s_active_int=c(0, 0.01,0.1,0.2,0.5,0.8), alpha_int=c(0.05,0.2),
+                    m=10, sd=5, n_max=1000)
 
-t1 <- get_time0()
-t1
-
-write.table(t1, file="time1.txt", sep="", row.names=F, col.names=F)
-
-my_data <- read.table("time1.txt", sep ="", header=F, dec=".")
+# f=10, B=10 -> nessuno
+# f=10, B=100 -> 4
+get_time(mytime$M, mytime$beta_active, mytime$beta_inactive)
 
 
-get_time <- function(M, beta_active, beta_inactive, n=20){
+
+#write.table(mytime$M, file="time1.txt", sep="", row.names=F, col.names=F)
+#my_data <- read.table("time1.txt", sep ="", header=F, dec=".")
+
+
+get_time <- function(M, beta_active, beta_inactive){
   set.seed(myseed)
-  w <- nrows(M)
+  w <- nrow(M)
   C <- rep(NA, w)
-  M <- cbind(M, C, C, C, C)
-  colnames(M) <- c("f", "perc", "B", "s_size", "s_active", "alpha", "BAB1", "time1",
-                   "BAB2", "time2", "BAB3", "time3")
+  M <- cbind(M, C, C, C, C, C, C)
+  # 1=lr, 2=lk, 3=hr, 4=hk
+  colnames(M) <- c("f", "perc", "B", "s_size", "s_active", "alpha", "flag", "BAB1", "time1",
+                   "BAB2", "time2", "BAB3", "time3", "BAB4", "time4")
   
   for(j in(1:w)){
     f <- M[j,1]
@@ -114,14 +131,24 @@ get_time <- function(M, beta_active, beta_inactive, n=20){
     s_size <- M[j,4]
     s_active <- M[j,5]
     alpha <- M[j,6]
+    nr1 <- M[j,7]
     
     beta <- generate_beta(f, perc, beta_active, beta_inactive)
-    G <- gt(n, f, B, 0, beta)
+    G <- gt(f, f, B, 0, beta)
     c <- ctrp_set(G)
     S <- generate_S(f, s_size, s_active)
-    t2 <- system.time(te2 <- ctrp_test2(S, c$D, c$R, c$I, alpha))[3]
-    t3 <- system.time(te3 <- ctrp_test3(S, c$D, c$R, c$I, alpha))[3]
-    M[j,(9:12)] <- c(te2$BAB, t2, te3$BAB, t3)
+    t2 <- system.time(te2 <- ctrp_test(S, c$D, c$R, c$I, alpha, n_max, from_low=T, first_rem=F))[3]
+    t3 <- system.time(te3 <- ctrp_test(S, c$D, c$R, c$I, alpha, n_max, from_low=F, first_rem=T))[3]
+    t4 <- system.time(te4 <- ctrp_test(S, c$D, c$R, c$I, alpha, n_max, from_low=F, first_rem=F))[3]
+    nr2 <- ifelse(length(te2$non_rej)==0, 0, ifelse(te2$non_rej, 1, -1))
+    nr3 <- ifelse(length(te3$non_rej)==0, 0, ifelse(te3$non_rej, 1, -1))
+    nr4 <- ifelse(length(te4$non_rej)==0, 0, ifelse(te4$non_rej, 1, -1))
+
+    M[j,(10:15)] <- c(te2$BAB, t2, te3$BAB, t3, te4$BAB, t4)
+    M[j,7] <- !(nr1 == nr2 & nr2 == nr3 & nr3 == nr4)
+    # F if there are no problems
+    
+    
   }
   
   return(M)
@@ -129,9 +156,15 @@ get_time <- function(M, beta_active, beta_inactive, n=20){
 
 
 
+f <- 100
+perc <- 0.20
+B <- 10
+s_size <- 0.2
+s_active <- 0.8
+alpha <- 0.2
 
 
-
+ctrp_test(S, c$D, c$R, c$I, alpha, n_max, from_low=F, first_rem=F)
 
 
 
