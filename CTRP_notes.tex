@@ -163,13 +163,22 @@ The shortcut is applied to each subspace, in order to evaluate the indecisive va
 \item if there is an indecisive outcome in at least one subspace, the procedure is iterated by partitioning the indecisive subspace(s).
 \end{itemize}
 
-For any choice of $e$, $U_v$ does not increase in the subspaces (since it is defined by taking the maximum statistics over smaller subsets). However, the choice of $e$ and the order in which the subspaces are explored influence $L_v$, and thus the efficiency of the algorithm. We wish to begin with the subspaces that are more likely to lead to a rejection, i.e. where $L_v$ is more likely to be high.
+For any choice of $e$, $U_v$ does not increase in the subspaces (since it is defined by taking the maximum statistics over smaller subsets). However, the choice of $e$ and the order in which the subspaces are explored influence $L_v$, and thus the efficiency of the algorithm. We wish to begin with the subspaces that are more likely to lead to a non-rejection, i.e. where $L_v$ is more likely to be high.
 
-I will evaluate the efficiency in three different scenarios, employing the order of the observed statistics in $F\setminus S$.
+We will evaluate the efficiency in four different scenarios, employing the order of the observed statistics in $F\setminus S$. The scenarios differ by the index $e$ used for branching:
 \begin{itemize}
-\item Removal of the highest statistic: $e=i_m$, and $\mathbb{S}_{-e}$ is explored first. In this case, $L_v$ does not vary in $\mathbb{S}_{-e}$, and is likely to decrease in $\mathbb{S}_{+e}$.
-\item Keeping of the lowest statistic: $e=i_1$, and $\mathbb{S}_{+e}$ is explored first. In this case, $L_v$ may decrease in $\mathbb{S}_{-e}$, and does not vary in $\mathbb{S}_{+e}$.
-\item Removal of the lowest statistic: $e=i_1$, and $\mathbb{S}_{-e}$ is explored first.
+\item highest statistic $e=i_m$ ($L_v$ does not vary in $\mathbb{S}_{-e}$, and is likely to decrease in $\mathbb{S}_{+e}$);
+\item lowest statistic $e=i_1$ ($L_v$ may decrease in $\mathbb{S}_{-e}$, and does not vary in $\mathbb{S}_{+e}$).
 \end{itemize}
+Moreover, they differ by the branch that is explored first:
+\begin{itemize}
+\item $\mathbb{S}_{-e}$, removal;
+\item $\mathbb{S}_{+e}$, keeping.
+\end{itemize}
+Preliminary simulations suggest that removing the highest statistic could lead to the smallest number of iterations in most cases.
+
+
+
+
 
 \end{document}

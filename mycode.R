@@ -4,7 +4,7 @@
 # R, matrix where each row is sorted in descending order
 # I, matrix of the indices corresponding to the elements of D
 
-ctrp_set <- function(G){
+R_ctrp_set <- function(G){
   f <- ncol(G)
   B <- nrow(G)
   
@@ -76,7 +76,7 @@ ctrp_set <- function(G){
 # Notice that L<0 when no non-rejection has been found
 # and U<0 when a certain rejection has been found
 
-Q <- function(X, k=ceiling(0.95*length(X)), B=length(X)){
+R_Q <- function(X, k=ceiling(0.95*length(X)), B=length(X)){
   
   t <- B-k+1 # threshold: min. number of non-negative el. to have q>= 0
   n <- 0 # number of non-negative el.
@@ -99,14 +99,14 @@ Q <- function(X, k=ceiling(0.95*length(X)), B=length(X)){
 
 
 # Internal function
-# Given a set S of indices, and the matrices D, R and I given by ctrp_set,
+# Given a set S of indices, and the matrices D, R and I given by R_ctrp_set,
 # it splits D, R and I, returning:
 # ds, vector of the test statistic for S
 # matrix D with only the indices not in S
 # matrix R with only the indices not in S
 # matrices Dsum and Rsum of the cumulative sums of ds with D and R
 
-gen_sub <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=length(S)){
+R_gen_sub <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=length(S)){
   
   if(m==0){
     ds <- rowSums(D)
@@ -158,13 +158,13 @@ gen_sub <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=len
 # It checks the bounds up to j-1, and then the following bounds
 # until one upper bound becomes negative.
 
-bounds_both <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), B=nrow(R)){
+R_bounds_both <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), B=nrow(R)){
   
   H <- length(ind)
   up <- rep(F, H) # keeps track of indecisive sizes
   h <- 1
   v <- ind[1]
-  low <- Q(Dsum[,v+1], k, B)
+  low <- R_Q(Dsum[,v+1], k, B)
   if(!low){
     out <- list("non_rej"=T, "ind"=ind)
     return(out)
@@ -172,7 +172,7 @@ bounds_both <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), 
   
   # if v=0, then up=F
   if(v > 0){
-    up[1] <- !Q(Rsum[,v+1], k, B)
+    up[1] <- !R_Q(Rsum[,v+1], k, B)
   }
   
   # first column in R with no positive element
@@ -191,16 +191,16 @@ bounds_both <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), 
   while(low & v<j-1 & h<H){
     h <- h+1
     v <- ind[h]
-    low <- Q(Dsum[,v+1], k, B)
-    up[h] <- !Q(Rsum[,v+1], k, B)
+    low <- R_Q(Dsum[,v+1], k, B)
+    up[h] <- !R_Q(Rsum[,v+1], k, B)
   }
   
   # bounds for v >= j (until the upper c.v. becomes negative)
   while(low & up[h] & h<H){
     h <- h+1
     v <- ind[h]
-    low <- Q(Dsum[,v+1], k, B)
-    up[h] <- !Q(Rsum[,v+1], k, B)
+    low <- R_Q(Dsum[,v+1], k, B)
+    up[h] <- !R_Q(Rsum[,v+1], k, B)
   }
   out <- list("non_rej"=!low, "ind"=ind[up])
   return(out)
@@ -220,13 +220,13 @@ bounds_both <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), 
 # It checks the bounds up to j-1, and then the following bounds
 # until one upper bound becomes negative.
 
-bounds_upper <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), B=nrow(R)){
+R_bounds_upper <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), B=nrow(R)){
   
   H <- length(ind)
   up <- rep(F, H) # keeps track of indecisive sizes
   h <- 1
   v <- ind[1]
-  up[1] <- !Q(Rsum[,v+1], k, B)
+  up[1] <- !R_Q(Rsum[,v+1], k, B)
   
   # first column in R with no positive element
   # (if m=1, then R is a vector)
@@ -244,14 +244,14 @@ bounds_upper <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R),
   while(v<j-1 & h<H){
     h <- h+1
     v <- ind[h]
-    up[h] <- !Q(Rsum[,v+1], k, B)
+    up[h] <- !R_Q(Rsum[,v+1], k, B)
   }
   
   # bounds for v >= j (until the upper c.v. becomes negative)
   while(up[h] & h<H){
     h <- h+1
     v <- ind[h]
-    up[h] <- !Q(Rsum[,v+1], k, B)
+    up[h] <- !R_Q(Rsum[,v+1], k, B)
   }
   out <- list("non_rej"=F, "ind"=ind[up])
   return(out)
@@ -267,11 +267,11 @@ bounds_upper <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R),
 # and the condition both (T if both bounds must be checked, F if ony the upper bound)
 # it checks the bounds for the indecisive sizes.
 
-compute_bounds <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), B=nrow(R), both=T){
+R_compute_bounds <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R), B=nrow(R), both=T){
   if(both){
-    out <- bounds_both(ind, R, Dsum, Rsum, k, m, B)
+    out <- R_bounds_both(ind, R, Dsum, Rsum, k, m, B)
   }else{
-    out <- bounds_upper(ind, R, Dsum, Rsum, k, m, B)
+    out <- R_bounds_upper(ind, R, Dsum, Rsum, k, m, B)
   }
   return(out)
 }
@@ -279,7 +279,7 @@ compute_bounds <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R
 
 
 
-# Given D, R, I as given by ctrp_set,
+# Given D, R, I as given by R_ctrp_set,
 # a vector of indices S, the significance level alpha
 # the maximum number n_max of BAB iterations (0 if no BAB),
 # the condition from_low (T if the BAB starts from the lowest statistic)
@@ -288,7 +288,7 @@ compute_bounds <- function(ind, R, Dsum, Rsum, k=ceiling(0.95*nrow(R)), m=ncol(R
 # and NULL if the number of steps reached the maximum before an indecisive outcome),
 # and BAB, the number of iterations.
 
-ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem=T){
+R_ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem=T){
   f <- ncol(D)
   B <- nrow(D)
   s <- length(S)
@@ -298,22 +298,26 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem
   # if S=F:
   if(m==0){
     # lower and upper bounds (equal)
-    low <- Q(rowSums(D), k, B)
+    low <- R_Q(rowSums(D), k, B)
     out <- list("non_rej"=!low, "BAB"=0)
     return(out)
   }
   
-  g <- gen_sub(S, D, R, I, f, m, B, s)
+  g <- R_gen_sub(S, D, R, I, f, m, B, s)
   ind <- (0:m)
-  cb <- compute_bounds(ind, g$R, g$Dsum, g$Rsum, k, m, B, both=T)
+  cb <- R_compute_bounds(ind, g$R, g$Dsum, g$Rsum, k, m, B, both=T)
   
   # if there is a non-rejection or there are no indecisives
   if(cb$non_rej | length(cb$ind)==0){
     out <- list("non_rej"=cb$non_rej, "BAB"=0)
     return(out)
   }
-  out <- ctrp_bab(cb$ind, g$D, g$R, g$I, g$Dsum, g$Rsum, k, m, B, n_max, from_low, first_rem)
-  #out <- list("non_rej"=cb$non_rej, "ind"=cb$ind, "ds"=g$ds, "D"=g$D, "R"=g$R, "I"=g$I, "Dsum"=g$Dsum, "Rsum"=g$Rsum)
+  #out <- R_ctrp_bab(cb$ind, g$D, g$R, g$I, g$Dsum, g$Rsum, k, m, B, n_max, from_low, first_rem)
+  #out <- list("non_rej"=cb$non_rej, "ind"=cb$ind, "D"=g$D, "R"=g$R, "I"=g$I,
+              #"Dsum"=g$Dsum, "Rsum"=g$Rsum, "k"=k, "m"=m, "B"=B)
+  
+  out <- R_generate_nodes(cb$ind, g$Dsum, g$Rsum, g$R, g$I, g$D, m-1, m, B, from_low, first_rem)
+
   return(out)
 }
 
@@ -334,7 +338,7 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem
 # zero is removed from the indecisive sizes.
 # If zero is the only indecisive size, node 2 is not computed
 
-generate_nodes_low <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0), B=nrow(D_0)){
+R_gen_nodes_low <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0), B=nrow(D_0)){
   h <- I[1,m+1] # index
   iD <- m_0 - m # index in D_0
   
@@ -401,7 +405,7 @@ generate_nodes_low <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D
 # when considering the highest statistic
 # In subspace 2, the indecisive sizes decrease of 1 unit
 
-generate_nodes_high <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0), B=nrow(D_0)){
+R_gen_nodes_high <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0), B=nrow(D_0)){
   h <- I[1,1] # index
   iD <- m+1 # index in D_0
   
@@ -440,12 +444,12 @@ generate_nodes_high <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(
 # it computes the two subspaces 1 and 2
 # (1 corresponds to the subspace that will be explored first)
 
-generate_nodes <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0),
+R_generate_nodes <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0),
                            B=nrow(D_0), from_low=T, first_rem=T){
   if(from_low){
-    out <- generate_nodes_low(ind, Dsum, Rsum, R, I, D_0, m, m_0, B)
+    out <- R_gen_nodes_low(ind, Dsum, Rsum, R, I, D_0, m, m_0, B)
   }else{
-    out <- generate_nodes_high(ind, Dsum, Rsum, R, I, D_0, m, m_0, B)
+    out <- R_gen_nodes_high(ind, Dsum, Rsum, R, I, D_0, m, m_0, B)
   }
   
   # if we start by keeping the selected statistic, then we exchange the names:
@@ -459,7 +463,7 @@ generate_nodes <- function(ind, Dsum, Rsum, R, I, D_0, m=ncol(R), m_0=ncol(D_0),
 
 
 
-ctrp_bab <- function(ind_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
+R_ctrp_bab <- function(ind_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
                      k=ceiling(0.95*nrow(R)), m_0=ncol(D_0), B=nrow(D_0), n_max=10000,
                      from_low=T, first_rem=T){
   
@@ -475,7 +479,7 @@ ctrp_bab <- function(ind_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
   while(BAB<n_max){
     # we take the last element added to the list, generate the two branches
     m <- m-1
-    g <- generate_nodes(nodes[[L]]$ind, nodes[[L]]$Dsum,
+    g <- R_generate_nodes(nodes[[L]]$ind, nodes[[L]]$Dsum,
                         nodes[[L]]$Rsum, nodes[[L]]$R,
                         nodes[[L]]$I, D_0, m, m_0, B, from_low, first_rem)
     cond <- length(g$ind_1)>0
@@ -491,7 +495,7 @@ ctrp_bab <- function(ind_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
     # we evaluate node 1, and iterate until a node 1 can be closed
     while(cond & BAB<n_max){
       BAB <- BAB + 1
-      cb <- compute_bounds(g$ind_1, g$R, g$Dsum_1, g$Rsum_1, k, m, B, both_first)
+      cb <- R_compute_bounds(g$ind_1, g$R, g$Dsum_1, g$Rsum_1, k, m, B, both_first)
       if(cb$non_rej){
         out <- list("non_rej"=T, "BAB"=BAB)
         return(out)
@@ -501,7 +505,7 @@ ctrp_bab <- function(ind_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
       if(cond){
         m <- m-1
         # we generate new nodes, after updating the indecisive sizes (g$ind_1 becomes cb$ind)
-        g <- generate_nodes(cb$ind, g$Dsum_1, g$Rsum_1, g$R, g$I, D_0, m, m_0, B, from_low, first_rem)
+        g <- R_generate_nodes(cb$ind, g$Dsum_1, g$Rsum_1, g$R, g$I, D_0, m, m_0, B, from_low, first_rem)
         cond <- length(g$ind_1)>0
         
         if(length(g$ind_2)>0){
@@ -525,7 +529,7 @@ ctrp_bab <- function(ind_0, D_0, R_0, I_0, Dsum_0, Rsum_0,
       }else{
         m <- 1
       }
-      cb <- compute_bounds(nodes[[L]]$ind, nodes[[L]]$R,
+      cb <- R_compute_bounds(nodes[[L]]$ind, nodes[[L]]$R,
                            nodes[[L]]$Dsum, nodes[[L]]$Rsum, k, m, B,
                            !both_first)
       if(cb$non_rej){

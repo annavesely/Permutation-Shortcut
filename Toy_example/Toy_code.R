@@ -56,7 +56,7 @@ G <- G[,c(1,4,2,5,3)]
 c <- ctrp_set(G)
 
 # set under testing
-S <- c(1:5)
+S <- c(5)
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20)
 te
 
