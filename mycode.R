@@ -313,10 +313,9 @@ R_ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_r
     return(out)
   }
   #out <- R_ctrp_bab(cb$ind, g$D, g$R, g$I, g$Dsum, g$Rsum, k, m, B, n_max, from_low, first_rem)
-  #out <- list("non_rej"=cb$non_rej, "ind"=cb$ind, "D"=g$D, "R"=g$R, "I"=g$I,
-              #"Dsum"=g$Dsum, "Rsum"=g$Rsum, "k"=k, "m"=m, "B"=B)
+  out <- list("non_rej"=cb$non_rej, "ind"=cb$ind, "D"=g$D, "R"=g$R, "I"=g$I, "Dsum"=g$Dsum, "Rsum"=g$Rsum, "k"=k, "m"=m, "B"=B)
   
-  out <- R_generate_nodes(cb$ind, g$Dsum, g$Rsum, g$R, g$I, g$D, m-1, m, B, from_low, first_rem)
+  #out <- R_generate_nodes(cb$ind, g$Dsum, g$Rsum, g$R, g$I, g$D, m-1, m, B, from_low, first_rem)
 
   return(out)
 }

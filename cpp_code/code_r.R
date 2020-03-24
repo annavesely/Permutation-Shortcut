@@ -117,3 +117,6 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem
   out <- cpp_test(ind, g$D, g$R, g$I, g$Dsum, g$Rsum, k, m, B, from_low, first_rem, n_max)
   return(out)
 }
+
+
+
