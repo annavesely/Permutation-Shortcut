@@ -39,6 +39,7 @@ bool Q(const NumericVector &X, const int &k, const int &B){
 // it finds the index of the first column in A with no positive element
 // (= the last index, c-1, if such column does not exist)
 
+// [[Rcpp::export]]
 int find_col(NumericMatrix &A, int &c){
   for (int j = 0; j <= c-1; ++j) {
     if (max(A(_,j)) <= 0) return j;
@@ -56,6 +57,7 @@ int find_col(NumericMatrix &A, int &c){
 
 // const IntegerVector ind, const NumericMatrix Dsum, const NumericMatrix Rsum, const NumericMatrix R, const NumericMatrix I, const int m,
 
+// [[Rcpp::export]]
 List bounds_both(IntegerVector &ind, NumericMatrix &Dsum,
                  NumericMatrix &Rsum, NumericMatrix &R, IntegerMatrix &I,
                  int &m, const int &k, const int &B){
@@ -79,7 +81,7 @@ List bounds_both(IntegerVector &ind, NumericMatrix &Dsum,
   int j = find_col(R, m);
   
   // bounds for v < j (before the upper c.v. decreases)
-  while (low && v < j-1 && h < H-1){
+  while (low && v < j && h < H-1){
     ++h;
     v = ind[h];
     low = Q(Dsum(_,v), k, B);
@@ -122,7 +124,7 @@ List bounds_upper(IntegerVector &ind, NumericMatrix &Dsum,
   int j = find_col(R, m);
   
   // upper bounds for v < j (before the upper c.v. decreases)
-  while (v < j-1 && h < H-1){
+  while (v < j && h < H-1){
     ++h;
     v = ind[h];
     up[h] = !Q(Rsum(_,v), k, B);
@@ -152,7 +154,7 @@ List bounds_upper(IntegerVector &ind, NumericMatrix &Dsum,
 // It checks the bounds up to j-1, and then the following bounds
 // until one upper bound becomes negative.
 
-
+// [[Rcpp::export]]
 List compute_bounds(IntegerVector &ind, NumericMatrix &Dsum,
                     NumericMatrix &Rsum, NumericMatrix &R,
                     IntegerMatrix &I, int m, const int &k, const int &B,
@@ -532,11 +534,11 @@ List cpp_test(IntegerVector ind, NumericMatrix D, NumericMatrix R,
   List cb = compute_bounds(ind, Dsum, Rsum, R, I, m, k, B, TRUE);
   IntegerVector ind_new = as<IntegerVector>(cb["ind"]);
   // if there is a non-rejection or there are no indecisives
-  if (cb["non_rej"] || ind.length() == 0){
-    List out = List::create(Named("non_rej")=cb["non_rej"], Named("BAB") = 0);
+  if (cb["non_rej"] || ind_new.length() == 0){
+    List out = List::create(Named("cont") = 0, Named("non_rej") = cb["non_rej"], Named("BAB") = 0);
     return out;
   }else{;
-    //List out = List::create(Named("prova")=ind, Named("BAB") = 10);
+    //List out = List::create(Named("cont")=1, Named("ind") = ind_new);
     List out = ctrp_bab (ind_new, D, R, I, Dsum, Rsum, k, m, B, from_low, first_rem, n_max);
     return out;
   }
