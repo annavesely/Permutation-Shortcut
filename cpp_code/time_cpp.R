@@ -44,7 +44,11 @@ gt <- function(n, f, B, beta0, beta){
 
 
 
-#given f and perc
+# Beta: given the number of variables f,
+# the percentage perc of active variables,
+# a vector beta_active of non-zero beta values
+# and a vector beta_inactive of zeros
+# it generates a vector of length f with ceiling(f * perc) active values
 generate_beta <- function(f, perc, beta_active, beta_inactive){
   n1 <- ceiling(f * perc) # active
   n2 <- f - n1 # inactive
@@ -62,7 +66,11 @@ generate_beta <- function(f, perc, beta_active, beta_inactive){
 
 
 
-# given s_size and s_active
+# S: given the number of variables f,
+# the percentage s_size of variables contained in the subset S,
+# and the percentage s_active of active variables within S,
+# it generates a vector of indices of length ceiling(f * s_size)
+# with ceiling(s * s_active) active indices
 generate_S <- function(f, s_size, s_active){
   s <- ceiling(f * s_size) # size
   n1 <- ceiling(s * s_active) # active
@@ -80,9 +88,11 @@ generate_S <- function(f, s_size, s_active){
 
 
 
-# NULL: 0
-# TRUE: 1
-# FALSE: -1
+
+# Conversion of non-rejection to integer:
+# NULL -> 0
+# TRUE -> 1
+# FALSE -> -1
 nr_num <- function(nr){
   ifelse(length(nr)==0, 0, ifelse(nr, 1, -1))
 }
@@ -90,10 +100,11 @@ nr_num <- function(nr){
 
 
 
-
-
-# Main test (without BAB)
-ctrp_test0 <- function(S, D, R, I, alpha, n_max){
+# Test for the main body (without BAB)
+# Given a subset S, the matrices D, R, I as given by ctrp_set,
+# and a significance level alpha, it returns cont=T if if the BAB is needed
+# It returns error if R and Rcpp give different outputs
+ctrp_test0 <- function(S, D, R, I, alpha){
   f <- ncol(D)
   B <- nrow(D)
   s <- length(S)
@@ -129,18 +140,23 @@ ctrp_test0 <- function(S, D, R, I, alpha, n_max){
 
 
 
+# Test for the BAB
+# Given a subset S, the matrices D, R, I as given by ctrp_set,
+# a significance level alpha and the maximum number of iterations n_max,
+# it returns error if R and Rcpp give different outputs or
+# use a different number of BAB iterations
+# for all four scenarios
 check_bab <- function(S, D, R, I, alpha, n_max){
   # 1=lr, 2=lk, 3=hr, 4=hk
   # 1: remove lowest (from_low=T, first_rem=T)
-  #R1 <- R_ctrp_test(S, D, R, I, alpha, n_max, T, T)
-  #C1 <- ctrp_test(S, D, R, I, alpha, n_max, T, T)
-  #if(nr_num(R1$non_rej) != nr_num(C1$non_rej) | R1$BAB != C1$BAB) stop("Error BAB1")
+  R1 <- R_ctrp_test(S, D, R, I, alpha, n_max, T, T)
+  C1 <- ctrp_test(S, D, R, I, alpha, n_max, T, T)
+  if(nr_num(R1$non_rej) != nr_num(C1$non_rej) | R1$BAB != C1$BAB) stop("Error BAB1")
   
   # 2: keep lowest (from_low=T, first_rem=F)
-  #R2 <- R_ctrp_test(S, D, R, I, alpha, n_max, T, F)
-  #C2 <- ctrp_test(S, D, R, I, alpha, n_max, T, F)
-  #if(nr_num(R2$non_rej) != nr_num(C2$non_rej) | R2$BAB != C2$BAB) stop("Error BAB2")
-  
+  R2 <- R_ctrp_test(S, D, R, I, alpha, n_max, T, F)
+  C2 <- ctrp_test(S, D, R, I, alpha, n_max, T, F)
+  if(nr_num(R2$non_rej) != nr_num(C2$non_rej) | R2$BAB != C2$BAB) stop("Error BAB2")
   
   # 3: remove highest (from_low=F, first_rem=T)
   R3 <- R_ctrp_test(S, D, R, I, alpha, n_max, F, T)
@@ -157,28 +173,27 @@ check_bab <- function(S, D, R, I, alpha, n_max){
 
 
 
-
-
-
-
-
+# Test
+# Given the intervals for the number of variables f (f_int)
+# the percentage perc of active variables (perc_int),
+# the number of permutations B (B_int),
+# the percentage s_size of variables contained in the subset S (s_size_int),
+# the percentage s_active of active variables within S (s_active_int),
+# the significance level alpha (alpha_int),
+# and given the mean m and standard deviation for the active beta values
+# and the maximum number of iterations,
+# it examines all combinations of values and
+# returns error if R and Rcpp give different outputs or
+# use a different number of BAB iterations
 check_RC <- function(f_int=c(10,50,100), perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
                      B_int=c(10,50,100), s_size_int=c(0.01,0.1,0.2,0.5,0.8, 1),
                      s_active_int=perc_int, alpha_int=c(0.05,0.2),
                      m=10, sd=5, n_max=10000){
   
   set.seed(myseed)
-  L <- length(f_int) * length(perc_int) * length(B_int) * length(s_size_int) *
-    length(s_active_int) * length(alpha_int)
-  M <- matrix(rep(NA, 6*L), ncol=6)
-  colnames(M) <- c("s_active", "perc", "s_size", "f", "B", "alpha")
-  # 1=lr, 2=lk, 3=hr, 4=hk
-  
   fmax <- max(f_int)
   beta_active <- rnorm(fmax, m, sd)
   beta_inactive <- rep(0, fmax)
-  
-  i <- 0
   
   for(f in f_int){
     
@@ -191,26 +206,19 @@ check_RC <- function(f_int=c(10,50,100), perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
         
         for(s_size in s_size_int){
           
-          for(s_active in s_active_int[s_active_int <= perc/s_size &
-                                       s_active_int >= 1 - (1 - perc)/s_size]){
+          for(s_active in s_active_int[s_active_int <= perc/s_size & s_active_int >= 1 - (1 - perc)/s_size]){
             S <- generate_S(f, s_size, s_active)
             
             for(alpha in alpha_int){
-              te <- ctrp_test0(S, c$D, c$R, c$I, alpha, n_max)
-              
-              if(te$cont){
-                i <- i+1
-                M[i,] <- c(s_active, perc, s_size, f, B, alpha)
-                check_bab(S, c$D, c$R, c$I, alpha, n_max)
-              }
+              te <- ctrp_test0(S, c$D, c$R, c$I, alpha)
+              if(te$cont) check_bab(S, c$D, c$R, c$I, alpha, n_max)
             }
           }
         }
       }
     }
   }
-  M <- M[(1:i),]
-  return(M)
+  return(TRUE)
 }
 
 
@@ -218,6 +226,18 @@ check_RC <- function(f_int=c(10,50,100), perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
 
 
 
+
+# Time
+# Given the number of variables f
+# the interval for the percentage perc of active variables (perc_int),
+# the number of permutations B,
+# the interval for the percentage s_size of variables contained in the subset S (s_size_int),
+# the interval for the percentage s_active of active variables within S (s_active_int),
+# the significance level alpha,
+# and given the mean m and standard deviation for the active beta values
+# and the maximum number of iterations,
+# it computes the times that R and Rcpp take to examine each scenario
+# and returns the two mean times (in milliseconds)
 get_time <- function(f, perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
                      B, s_size_int=c(0.01,0.1,0.2,0.5,0.8, 1),
                      s_active_int=perc_int, alpha,
@@ -227,17 +247,18 @@ get_time <- function(f, perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
   L <- length(perc_int) * length(s_size_int) * length(s_active_int)
   M <- matrix(rep(NA, 2*L), ncol=2)
   colnames(M) <- c("tR", "tC")
-  # 1=lr, 2=lk, 3=hr, 4=hk
   
   beta_active <- rnorm(f, m, sd)
   beta_inactive <- rep(0, f)
-  
   i <- 0
+  
   for(perc in perc_int){
     beta <- generate_beta(f, perc, beta_active, beta_inactive)
     G <- gt(f, f, B, 0, beta)
     c <- ctrp_set(G)
+    
     for(s_size in s_size_int){
+      
       for(s_active in s_active_int[s_active_int <= perc/s_size & s_active_int >= 1 - (1 - perc)/s_size]){
         S <- generate_S(f, s_size, s_active)
         tR <- system.time(R_ctrp_test(S, c$D, c$R, c$I, alpha, n_max, F, T))[3]
@@ -248,47 +269,35 @@ get_time <- function(f, perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
     }
   }
   M <- M[(1:i),]
-  R_mean <- round(mean(M[,1])*1000,0)
-  C_mean <- round(mean(M[,2])*1000,0)
-  out <- list("R_mean"=R_mean, "C_mean"=C_mean)
+  out <- list("R_mean"=round(mean(M[,1])*1000,0), "C_mean"=round(mean(M[,2])*1000,0))
   return(out)
 }
 
 
 
 
-
-
-#c(0, 0.01,0.1,0.2,0.5,0.8)
-
-f_int <- c(10)
+# Tests:
 perc_int <- c(0,0.01,0.1,0.2,0.5,0.8)
-B_int <- c(10)
+B_int <- c(10,50,100)
 s_active_int <- c(0,0.01,0.1,0.2,0.5,0.8)
 s_size_int <- c(0.01,0.1,0.2,0.5,0.8)
-alpha_int=c(0.05, 0.2)
+alpha_int <- c(0.05,0.2)
 m=10
 sd=5
 n_max=10000
 
+check_RC(f_int=c(10), perc_int, B_int, s_size_int, s_active_int, alpha_int, m, sd, n_max)
+check_RC(f_int=c(50), perc_int, B_int, s_size_int, s_active_int, alpha_int, m, sd, n_max)
+check_RC(f_int=c(100), perc_int, B_int, s_size_int, s_active_int, alpha_int, m, sd, n_max)
 
-f <- 500
-perc_int <- c(0,0.01,0.1,0.2,0.5,0.8)
-B <- 500
-s_active_int <- c(0,0.01,0.1,0.2,0.5,0.8)
-s_size_int <- c(0.01,0.1,0.2,0.5,0.8)
+
+# Time:
 alpha <- 0.05
-m=10
-sd=5
-n_max=10000
+get_time(f=10, perc_int, B=10, s_size_int, s_active_int, alpha, m, sd, n_max)
+get_time(f=100, perc_int, B=500, s_size_int, s_active_int, alpha, m, sd, n_max)
+get_time(f=500, perc_int, B=100, s_size_int, s_active_int, alpha, m, sd, n_max)
+get_time(f=500, perc_int, B=500, s_size_int, s_active_int, alpha, m, sd, n_max)
 
-
-
-
-get_time(f, perc_int, B, s_size_int, s_active_int, alpha, m, sd, n_max)
-
-
-#ctrp_test(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem=T)
 
 
 

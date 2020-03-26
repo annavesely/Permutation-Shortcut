@@ -39,8 +39,8 @@ ctrp_set <- function(G){
 
 # Internal function
 # Given a set S of indices, and the matrices D, R and I given by ctrp_set,
-# it splits D, R and I, returning:
-# ds, vector of the test statistic for S
+# m=ncol(D)-length(S), B=nrow(D) and s=length(S), it splits D, R and I and returns:
+# ds, vector of the test statistics for S
 # matrix D with only the indices not in S
 # matrix R with only the indices not in S
 # matrices Dsum and Rsum of the cumulative sums of ds with D and R
@@ -88,14 +88,13 @@ gen_sub <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=len
 
 
 
-# Given D, R, I as given by ctrp_set,
-# a vector of indices S, the significance level alpha
-# the maximum number n_max of BAB iterations (0 if no BAB),
+# Given a vector of indices S, the matrices D, R, I as given by ctrp_set,
+# the significance level alpha, the maximum number n_max of BAB iterations
 # the condition from_low (T if the BAB starts from the lowest statistic)
 # and the condition first_rem (T if the BAB starts by removing the statistic),
-# the function tests S. It returns non_rej (T if S is not rejected, F if it is rejected,
-# and NULL if the number of steps reached the maximum before an indecisive outcome),
-# and BAB, the number of iterations.
+# the function tests S. It returns non_rej (T if there is a non-rejection,
+# F if S is rejected, and NULL if the maximum number of iterations is reached before
+# a decisive output) and BAB, the number of iterations.
 
 ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem=T){
   f <- ncol(D)
@@ -113,8 +112,7 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem
   }
   
   g <- gen_sub(S, D, R, I, f, m, B, s)
-  ind <- (0:m)
-  out <- cpp_test(ind, g$D, g$R, g$I, g$Dsum, g$Rsum, k, m, B, from_low, first_rem, n_max)
+  out <- cpp_test(g$D, g$R, g$I, g$Dsum, g$Rsum, k, m, B, from_low, first_rem, n_max)
   return(out)
 }
 
