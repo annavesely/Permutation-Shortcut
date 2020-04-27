@@ -37,13 +37,13 @@ bool Q(const NumericVector &X, const int &k, const int &B){
 // Internal function
 // Given a matrix A and c=ncol(A),
 // it finds the index of the first column in A with no positive element
-// (= the last index, c-1, if such column does not exist)
+// (= the last index + 1, c, if such column does not exist)
 
 int find_col(NumericMatrix &A, int &c){
   for (int j = 0; j <= c-1; ++j) {
     if (max(A(_,j)) <= 0) return j;
   }
-  return c-1; // if there is no such column, then j is the last one
+  return c-1; // if there is no such column, then j is the last one + 1
 }
 
 
@@ -202,8 +202,8 @@ int match_el (int &x, IntegerMatrix &A, int &a, int &L){
 // and node2 with bounds_upper. Hence if zero is in node_2, we can remove it
 // (since the upper bound coincides with the lower bound, which is < 0)
 
-List gen_nodes_low (IntegerVector ind, NumericMatrix Dsum, NumericMatrix Rsum,
-                     NumericMatrix R, IntegerMatrix I, int &m, NumericMatrix &D_0,
+List gen_nodes_low (IntegerVector &ind, NumericMatrix &Dsum, NumericMatrix &Rsum,
+                     NumericMatrix &R, IntegerMatrix &I, int &m, NumericMatrix &D_0,
                      const int &B, const int &m_0){
   int m_old = m;
   --m;
@@ -304,9 +304,9 @@ List gen_nodes_low (IntegerVector ind, NumericMatrix Dsum, NumericMatrix Rsum,
 // In subspace 2, the indecisive sizes decrease of 1 unit
 // In this case, node1 will be analysed with bounds_upper,
 // and node2 with bounds_both. Hence if zero is in node_2, we cannot remove it
-
-List gen_nodes_high (IntegerVector ind, NumericMatrix Dsum, NumericMatrix Rsum,
-                     NumericMatrix R, IntegerMatrix I, int &m, NumericMatrix &D_0,
+// PASSING BY REFERENCE
+List gen_nodes_high (IntegerVector &ind, NumericMatrix &Dsum, NumericMatrix &Rsum,
+                     NumericMatrix &R, IntegerMatrix &I, int &m, NumericMatrix &D_0,
                      const int &B){
   int m_old = m;
   --m;
@@ -371,8 +371,8 @@ List gen_nodes_high (IntegerVector ind, NumericMatrix Dsum, NumericMatrix Rsum,
 // Node1 is the node which will be explored first: it corresponds to the "remove"
 // node if first_rem=T, and the "keep" node otherwise
 
-List generate_nodes (IntegerVector ind, NumericMatrix Dsum, NumericMatrix Rsum,
-                     NumericMatrix R, IntegerMatrix I, int m, NumericMatrix &D_0,
+List generate_nodes (IntegerVector &ind, NumericMatrix &Dsum, NumericMatrix &Rsum,
+                     NumericMatrix &R, IntegerMatrix &I, int &m, NumericMatrix &D_0,
                      const int &B, const int &m_0, const bool &from_low,
                      const bool &first_rem){
   
@@ -439,10 +439,13 @@ List ctrp_bab (IntegerVector ind_0, NumericMatrix D_0, NumericMatrix R_0,
   while (BAB < n_max){
     
     // we take the last element added to the list, generate the two branches
-    g = generate_nodes (as<IntegerVector>(IndList[L]), as<NumericMatrix>(DsumList[L]),
-                        as<NumericMatrix>(RsumList[L]), as<NumericMatrix>(RList[L]),
-                        as<IntegerMatrix>(IList[L]), m, D_0, B, m_0, from_low, first_rem);
-    --m;
+    ind_temp = clone(as<IntegerVector>(IndList[L]));
+    Dsum_temp = clone(as<NumericMatrix>(DsumList[L]));
+    Rsum_temp = clone(as<NumericMatrix>(RsumList[L]));
+    R_temp = clone(as<NumericMatrix>(RList[L]));
+    I_temp = clone(as<IntegerMatrix>(IList[L]));
+    g = generate_nodes (ind_temp, Dsum_temp, Rsum_temp, R_temp, I_temp, m, D_0, B, m_0, from_low, first_rem);
+    //--m;
     
     cond = (g["ind_1"] != R_NilValue);
     if (g["ind_2"] != R_NilValue){
@@ -480,7 +483,7 @@ List ctrp_bab (IntegerVector ind_0, NumericMatrix D_0, NumericMatrix R_0,
         // (g$ind_1 becomes cb$ind)
         ind_temp = clone(as<IntegerVector>(cb["ind"]));
         g = generate_nodes (ind_temp, Dsum_temp, Rsum_temp, R_temp, I_temp, m, D_0, B, m_0, from_low, first_rem);
-        --m;
+        //--m;
         cond = (g["ind_1"] != R_NilValue);
         if (g["ind_2"] != R_NilValue){
           IndList.push_back(clone(as<IntegerVector>(g["ind_2"])));
@@ -553,7 +556,7 @@ List cpp_test(NumericMatrix D, NumericMatrix R,
   IntegerVector ind_new = as<IntegerVector>(cb["ind"]);
   // if there is a non-rejection or there are no indecisives
   if (cb["non_rej"] || ind_new.length() == 0){
-    List out = List::create(Named("cont") = 0, Named("non_rej") = cb["non_rej"], Named("BAB") = 0);
+    List out = List::create(Named("non_rej") = cb["non_rej"], Named("BAB") = 0);
     return out;
   }else{;
     //List out = List::create(Named("cont")=1, Named("ind") = ind_new);
@@ -564,6 +567,3 @@ List cpp_test(NumericMatrix D, NumericMatrix R,
   
 
 
-  
-  
-  

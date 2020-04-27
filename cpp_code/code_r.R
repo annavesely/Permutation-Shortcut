@@ -10,9 +10,11 @@ Rcpp::sourceCpp('code_c.cpp')
 # R, matrix where each row is sorted in descending order
 # I, matrix of the indices corresponding to the elements of D
 
-ctrp_set <- function(G){
+ctrp_set <- function(G, higher=TRUE){
   f <- ncol(G)
   B <- nrow(G)
+  
+  if(!higher) G <- -1 * G
   
   # ordering according to the first row
   I_incr <- order(G[1,], decreasing=F)
@@ -28,7 +30,7 @@ ctrp_set <- function(G){
   # matrix of indices in R
   I <- matrix(rep(I_incr,B), ncol=f, byrow=T)
   I <- t(sapply(seq(B), function(x) I[x, o[x,]]))
-  I[1,] <- rev(I[1,])
+  I[1,] <- rev(I[1,]) # since they are all 0, we need to reverse the order
   
   out <- list("D"=D, "R"=R,"I"=I)
   return(out)

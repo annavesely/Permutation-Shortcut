@@ -134,16 +134,14 @@ $(5)$ &  & $(4)$ & $(3)$ & $(2)$ & $(1)$ &  &  &  &  &  \\
 %}
 \end{table}
 
-The lower and upper critical values, $L_v$ and $U_v$, are the 8-th ordered statistics of
+Let $k=\lceil (1-\alpha) B\rceil =8$. The lower and upper critical values, $L_v$ and $U_v$, are the $k$-th ordered statistics of
 \begin{align*}
-& \mathbf{d}_{\tilde{V}}=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{D}_i & \mathbf{u}_v=\mathbf{d}_3 + \sum_{i=1}^v \mathbf{R}_i.
+& \mathbf{d}_{\tilde{V}}=\mathbf{d}_S + \sum_{i=1}^v \mathbf{D}_i & \mathbf{u}_v=\mathbf{d}_S + \sum_{i=1}^v \mathbf{R}_i.
 \end{align*}
 
-Since the first column of $\mathbf{R}$ having no positive elements has index $w=3$, we start by computing $L_v$ for $v=0,1,2$.
+The first column of $\mathbf{R}$ having no positive elements has index $w=3$. We start by computing both bounds for $v=0,1,2$. No non-rejection is found, but the values $v=1,2$ lead to an indecisive outcome.
 
-No non-rejection is found, and thus we proceed by examining $v>2$, until we find either a rejection or a negative $U_v$. Here $U_v$ becomes negative for $v=3$, hence the supersets with $v=3,4$ are automatically rejected.
-
-Finally, we determine the indecisive values by looking at $U_v$. Here they are $v=1,2$.
+We proceed by examining $v>2$, until we find either a rejection or a negative $U_v$. Since $U_v$ becomes negative for $v=3$, the supersets with $v=3,4$ are automatically rejected.
 
 \begin{figure}[h!]
 \centering

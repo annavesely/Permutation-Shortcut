@@ -54,7 +54,7 @@ first_rem <- T
 # T, T
 # T, F
 
-C_out <- ctrp_test(S, D, R, I, alpha, n_max, F, T)
+C_out <- ctrp_test(S, D, R, I, alpha, n_max, F, F)
 C_out
 
 

@@ -261,15 +261,16 @@ get_time <- function(f, perc_int=c(0, 0.01,0.1,0.2,0.5,0.8),
       
       for(s_active in s_active_int[s_active_int <= perc/s_size & s_active_int >= 1 - (1 - perc)/s_size]){
         S <- generate_S(f, s_size, s_active)
-        tR <- system.time(R_ctrp_test(S, c$D, c$R, c$I, alpha, n_max, F, T))[3]
+        #tR <- system.time(R_ctrp_test(S, c$D, c$R, c$I, alpha, n_max, F, T))[3]
         tC <- system.time(ctrp_test(S, c$D, c$R, c$I, alpha, n_max, F, T))[3]
         i <- i+1
-        M[i,] <- c(tR, tC)
+        #M[i,] <- c(tR, tC)
+        M[i,] <- c(0, tC)
       }
     }
   }
   M <- M[(1:i),]
-  out <- list("R_mean"=round(mean(M[,1])*1000,0), "C_mean"=round(mean(M[,2])*1000,0))
+  out <- list("R_mean"=round(mean(M[,1]),2), "C_mean"=round(mean(M[,2]),2))
   return(out)
 }
 
@@ -293,10 +294,46 @@ check_RC(f_int=c(100), perc_int, B_int, s_size_int, s_active_int, alpha_int, m, 
 
 # Time:
 alpha <- 0.05
-get_time(f=10, perc_int, B=10, s_size_int, s_active_int, alpha, m, sd, n_max)
+get_time(f=100, perc_int, B=100, s_size_int, s_active_int, alpha, m, sd, n_max)
 get_time(f=100, perc_int, B=500, s_size_int, s_active_int, alpha, m, sd, n_max)
 get_time(f=500, perc_int, B=100, s_size_int, s_active_int, alpha, m, sd, n_max)
 get_time(f=500, perc_int, B=500, s_size_int, s_active_int, alpha, m, sd, n_max)
+
+
+
+
+
+
+s_active <- 1
+perc <- 0.01
+s_size <- 0.01
+f <- 100
+B <- 100
+alpha <- 0.2
+m <- 10
+sd <- 5
+n_max <- 10000
+
+beta_active <- rnorm(f, m, sd)
+beta_inactive <- rep(0, f)
+beta <- generate_beta(f, perc, beta_active, beta_inactive)
+G <- gt(f, f, B, 0, beta)
+c <- ctrp_set(G)
+S <- generate_S(f, s_size, s_active)
+
+
+Rprof()
+prova2 <- ctrp_test(S, c$D, c$R, c$I, alpha, n_max, F, T)
+Rprof(NULL)
+summaryRprof()
+
+
+
+
+
+
+
+
 
 
 

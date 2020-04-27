@@ -57,7 +57,7 @@ c <- ctrp_set(G)
 
 # set under testing
 S <- c(5)
-te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20)
+te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, F, T)
 te
 
 
@@ -71,6 +71,129 @@ c <- ctrp_set(G)
 S <- c(3)
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, from_low=T, first_rem=T)
 te
+
+
+
+
+# TDP EXAMPLE
+f <- 7
+B <- 10
+G <- gt(n=20, f=7, B=10, beta0=0, beta=c(20,10,5,0,0,0,0))
+#G <- G[,c(4,6,5,7,1,3,2)]
+G <- G[,c(3,2,5,7,1,4,6)]
+c <- ctrp_set(G)
+#S <- c(5,6,7)
+s <- length(S)
+m <- f-s
+te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, F, T)
+te
+
+
+gen_sub2 <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=length(S)){
+  
+  i <- match(S,I[1,])
+  i_D <- f+1-i
+  i_D <- rev(i_D)
+  Ds <- D[,i_D]
+  Dc <- D[,-i_D]
+  
+  # if m=1, then Rc=Dc and Ic are vectors
+  if(m==1){
+    Ic <- rep(I[1,-i], B)
+    Rc <- Dc
+  }else{
+    Ic <- matrix(rep(NA, B*m), ncol=m)
+    Rc <- Ic
+    Is <- matrix(rep(NA, B*s), ncol=s)
+    Rs <- Is
+    Ic[1,] <- I[1,-i]
+    Rc[1,] <- R[1,-i]
+    Is[1,] <- I[1,i]
+    Rs[1,] <- R[1,i]
+    for(x in (2:B)){
+      Sord <- I[x,][I[x,]%in%S]
+      i <- match(Sord, I[x,])
+      Ic[x,] <- I[x,-i]
+      Rc[x,] <- R[x,-i]
+      Is[x,] <- I[x,i]
+      Rs[x,] <- R[x,i]
+    }
+  }
+  ds <- rowSums(Ds)
+  Dsum <- t(apply(cbind(ds, Dc), 1, cumsum))
+  Rsum <- t(apply(cbind(ds, Rc), 1, cumsum))
+  out <- list("ds"=ds, "D"=as.matrix(Dc), "R"=as.matrix(Rc), "I"=as.matrix(Ic),
+              "Dsum"=Dsum, "Rsum"=Rsum, "Ds"=as.matrix(Ds), "Rs"=as.matrix(Rs),
+              "Is"=as.matrix(Is))
+}
+
+
+g <- gen_sub2(S, c$D, c$R, c$I, f, m, B, s)
+
+
+
+
+
+
+
+alpha <- 0.2
+k <- ceiling(alpha * B)
+
+
+
+# Given a vector X and a value k, it returns the critical value
+# i.e. the k-th statistic (when sorted in increasing order)
+Qu <- function(X, k){
+  Xord <- sort(X, na.last = NA, decreasing=F, method="quick")
+  return(Xord[k])
+}
+
+
+tdp_bounds <- function(Dsum, Rsum, Ds, Rs, s=ncol(Rs), m=ncol(Dsum)-1, k){
+  
+  z <- 0
+  cond <- TRUE
+  Dsum_z <- Dsum
+  Rsum_z <- Rsum
+  
+  low <- rep(NA,m+1)
+  up <- low
+  
+  while(cond & z<s){
+    z <- z+1
+    Dsum_z <- Dsum_z - Ds[,s-z+1]
+    Rsum_z <- Rsum_z - Rs[,s-z+1]
+    low[1] <- Qu(Dsum_new[,1], k)
+    up[1] <- low[1]
+    low[m+1] <- Qu(Dsum_new[,m+1], k)
+    up[m+1] <- low[m+1]
+    
+    for(v in(2:m)){
+      low[v] <- Qu(Dsum_new[,v], k)
+      up[v] <- Qu(Rsum_new[,v], k)
+    }
+  }
+  
+  return(list("low"=low, "up"=up))
+}
+
+
+
+# z=1
+Dsum_new <- g$Dsum - g$Ds[,s]
+Rsum_new <- g$Rsum - g$Rs[,s]
+
+
+low <- rep(NA,m+1)
+low[1] <- Qu(Dsum_new[,1], k)
+up <- low
+
+for(v in(2:(m+1))){
+  low[v] <- Qu(Dsum_new[,v], k)
+  up[v] <- Qu(Rsum_new[,v], k)
+}
+
+
 
 
 
