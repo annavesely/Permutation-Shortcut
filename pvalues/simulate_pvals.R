@@ -271,32 +271,6 @@ bab_pvals <- function(r=c(-100,-10,-2,-1,-0.5,-0.1,0,0.1,0.5,1,2,10,100),
 }
 
 
-#rho1: 0, 0.99
-# SNR: 0.001 (la situa bella è quando rho1=0.99 e rho2=0)
-# 0,0.1,0.5,0.9,1
-
-bab_pvals(r=c(-100,-10,-2,-1,-0.5,-0.1,0,0.1,0.5,1,2,10,100),
-          f=50, rho1=0, rho2=0, SNR=0.1, n=20, B=50, s_size=0.2,
-          s_star=0, o_star=c(0,0.1,0.5,0.9,1),
-          alpha=0.20, n_max=10000, W=100)
-
-
-bab_pvals(r=c(1),
-          f=100, rho1=0, rho2=0, SNR=100, n=20, B=100, s_size=0.2,
-          s_star=0, o_star=c(1),
-          alpha=0.20, n_max=10000, W=100)
-
-f <- 100
-rho1 <- 0
-rho2 <- 0
-SNR <- 100
-n <- 20
-B <- 100
-s_size <- 0.2
-s_star <- 0
-o_star <- 1
-alpha <- 0.20
-n_max <- 10000
 
 
 # Given the vector of indices r, the number f of variables,
@@ -348,54 +322,6 @@ bab_iter <- function(r=c(-100,-10,-2,-1,-0.5,-0.1,0,0.1,0.5,1,2,10,100),
 # -------------------------------------------------------------- #
 
 
-# Given a vector X and a value k, it returns the critical value
-# i.e. the k-th statistic (when sorted in increasing order)
-Qu <- function(X, k){
-  Xord <- sort(X, na.last = NA, decreasing=F, method="quick")
-  return(Xord[k])
-}
-
-
-
-
-
-
-# Given a vector of indices S, the matrices D, R, I as given by ctrp_set,
-# the significance level alpha, the function returns the vectors of
-# the upper and lower bounds for each superset size
-ctrp_bounds <- function(S, D, R, I, alpha=0.05){
-  f <- ncol(D)
-  B <- nrow(D)
-  s <- length(S)
-  m <- f-s
-  k <- ceiling((1-alpha)*B)
-  
-  # if S=F:
-  if(m==0){
-    # lower and upper bounds (equal)
-    low <- Qu(rowSums(D), k)
-    up <- low
-    out <- list("up"=up, "low"=low)
-    return(out)
-  }
-  
-  g <- gen_sub(S, D, R, I, f, m, B, s)
-  ind <- (0:m)
-  low <- rep(NA,m+1)
-  up <- low
-  
-  for(i in(1:(m+1))){
-    low[i] <- Qu(g$Dsum[,i], k)
-    up[i] <- Qu(g$Rsum[,i], k)
-  }
-  
-  nr <- ctrp_test(S, D, R, I, alpha, 0, F, F)$non_rej
-  
-  out <- list("up"=up, "low"=low, "non_rej"=nr)
-  return(out)
-}
-
-
 
 myseed <- 33
 set.seed(myseed)
@@ -430,39 +356,31 @@ bounds_pvals <- function(r=0, f=100, rho1=0, rho2=0, SNR=5, n=20, B=100, s_size=
 
 
 
-# Given the vectors of the lower and upper bounds
-# the function plots the lower bound in blue, the upper bound in red,
-# and the value zero in black
-require(ggplot2)
 
-ctrp_plot <- function(low, up){
-  df <- data.frame(size=seq(length(low))-1, low=low, up=up, obs=0)
-  ggplot(df, aes()) +
-    geom_line(aes(size, obs), linetype = "dashed", size=1) +
-    geom_line(aes(size, up), colour="red", size=1) +
-    geom_line(aes(size, low), colour="blue", size=1) +
-    ylab("") + xlab("additional indices")
-}
 
+
+
+
+
+#rho1: 0, 0.99
+# SNR: 0.001 (la situa bella è quando rho1=0.99 e rho2=0)
+# 0,0.1,0.5,0.9,1
+
+bab_pvals(r=c(-100,-10,-2,-1,-0.5,-0.1,0,0.1,0.5,1,2,10,100),
+          f=50, rho1=0, rho2=0, SNR=0.1, n=20, B=50, s_size=0.2,
+          s_star=0, o_star=c(0,0.1,0.5,0.9,1),
+          alpha=0.20, n_max=10000, W=100)
+
+
+bab_pvals(r=c(1),
+          f=100, rho1=0, rho2=0, SNR=100, n=20, B=100, s_size=0.2,
+          s_star=0, o_star=c(1),
+          alpha=0.20, n_max=10000, W=100)
 
 
 # repeat for all r values
-bp <- bounds_pvals(r=-100, f=50, rho1=0.99, rho2=0, SNR=0.1, n=20, B=50, s_size=0.2, s_star=0.5,
+bp <- bounds_pvals(r=-52, f=50, rho1=0.99, rho2=0, SNR=0.1, n=20, B=50, s_size=0.2, s_star=0.5,
                 o_star=0.1, alpha=0.20)
-ctrp_plot(bp$low, bp$up)
+ctrp_plot0(bp$low, bp$up)
 
-
-# r=-10
-bp$low <- bp$low/1e+222
-bp$up <- bp$up/1e+222
-df <- data.frame(size=seq(length(bp$low))-1, low=bp$low, up=bp$up, obs=0)
-ggplot(df, aes()) +
-  geom_line(aes(size, obs), linetype = "dashed", size=1) +
-  geom_line(aes(size, up), colour="red", size=1) +
-  geom_line(aes(size, low), colour="blue", size=1) +
-  ylab("") + xlab("additional indices") +
-  #scale_y_continuous(limits=c(-3.5e+06,1))
-  scale_y_continuous(limits=c(-2.1,0), breaks=c(-2,-1,0), labels=c(-2e+222, -1e+222, 0))
-
-# -------------------------------------------------------------- #
 

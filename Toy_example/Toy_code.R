@@ -60,6 +60,9 @@ S <- c(5)
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, F, T)
 te
 
+bo <- ctrp_bounds(S, c$D, c$R, c$I, 0.20)
+ctrp_plot(bo$low, bo$up)
+
 
 # SAME, COLUMNS NOT SORTED
 
@@ -190,40 +193,30 @@ tdp_bounds <- function(Dsum, Rsum, Ds, Rs, s=ncol(Rs), m=ncol(Dsum)-1, k){
 # z=1
 Dsum_new <- g$Dsum - g$Ds[,s]
 Rsum_new <- g$Rsum - g$Rs[,s]
-
-
-low <- rep(NA,m+1)
-low[1] <- Qu(Dsum_new[,1], k)
-up <- low
-
-for(v in(2:(m+1))){
-  low[v] <- Qu(Dsum_new[,v], k)
-  up[v] <- Qu(Rsum_new[,v], k)
-}
-
-round(up,2)
-round(low,2)
-
-
+w1 <- write_bounds(Dsum_new, Rsum_new, k, m)
+round(w1$up,2)
+round(w1$low,2)
+ctrp_plot(w1$low, w1$up, TRUE)
+# always rejected
 
 # z=2
 Dsum_new <- Dsum_new - g$Ds[,s-1]
 Rsum_new <- Rsum_new - g$Rs[,s-1]
+w2 <- write_bounds(Dsum_new, Rsum_new, k, m)
+round(w2$up,2)
+round(w2$low,2)
+ctrp_plot(w2$low, w2$up, TRUE)
+# rejected only by lower
 
 
-low <- rep(NA,m+1)
-low[1] <- Qu(Dsum_new[,1], k)
-up <- low
-
-for(v in(2:(m+1))){
-  low[v] <- Qu(Dsum_new[,v], k)
-  up[v] <- Qu(Rsum_new[,v], k)
-}
-
-
-round(up,2)
-round(low,2)
-
+# z=3
+Dsum_new <- Dsum_new - g$Ds[,s-2]
+Rsum_new <- Rsum_new - g$Rs[,s-2]
+w3 <- write_bounds(Dsum_new, Rsum_new, k, m)
+round(w3$up,2)
+round(w3$low,2)
+ctrp_plot(w3$low, w3$up, TRUE)
+# rejected only by lower
 
 
 

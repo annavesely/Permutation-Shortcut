@@ -120,3 +120,104 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem
 
 
 
+
+# PLOT FOR THE BOUNDS #
+
+# Given a vector X and a value k, it returns the critical value
+# i.e. the k-th statistic (when sorted in increasing order)
+Qu <- function(X, k){
+  Xord <- sort(X, na.last = NA, decreasing=F, method="quick")
+  return(Xord[k])
+}
+
+
+
+
+# Given the matrices Dsum and Rsum as returned by gen_sub,
+# the index k and m=ncol(Dsum)-1 (with m>0),
+# it returns the vectors of the lower and upper critical values
+# for each superset size, from 0 to m
+write_bounds <- function(Dsum, Rsum, k, m=ncol(Dsum)-1){
+  low <- rep(NA,m+1)
+  low[1] <- Qu(Dsum[,1], k)
+  low[m+1] <- Qu(Dsum[,m+1], k)
+  up <- low
+  
+  v <- 1
+  while(v < m){
+    v <- v+1
+    low[v] <- Qu(Dsum[,v], k)
+    up[v] <- Qu(Rsum[,v], k)
+  }
+  out <- list("low"=low, "up"=up)
+  return(out)
+}
+
+
+
+
+# Given a vector of indices S, the matrices D, R, I as given by ctrp_set
+# and the significance level alpha,
+# it returns the vectors of the lower and upper critical values
+# for each superset size, from 0 to m
+ctrp_bounds <- function(S, D, R, I, alpha=0.05){
+  f <- ncol(D)
+  B <- nrow(D)
+  s <- length(S)
+  m <- f-s
+  k <- ceiling((1-alpha)*B)
+  
+  # if S=F:
+  if(m==0){
+    # lower and upper bounds (equal)
+    low <- Qu(rowSums(D), k)
+    out <- list("low"=low, "up"=low)
+    return(out)
+  }
+  
+  g <- gen_sub(S, D, R, I, f, m, B, s)
+  out <- write_bounds(g$Dsum, g$Rsum, k, m)
+  return(out)
+}
+
+
+
+
+# Given the vectors of the lower and upper bounds
+# and a boolean add_point (TRUE if points corresponding to observations
+# should be added to the plot), it plots the lower bound in blue,
+# the upper bound in red and the value zero in black
+# A correction in applied for vectors having values <= -1e+155
+
+require(ggplot2)
+
+ctrp_plot <- function(low, up, add_point=FALSE){
+  
+  a <- min(0,low)
+  b <- max(0,up)
+  M <- max(abs(a), abs(b))
+  div <- 10^(floor(log(M,10)))
+  
+  low <- low/div
+  up <- up/div
+  df <- data.frame(size=seq(length(low))-1, low=low, up=up, obs=0)
+  
+  a <- floor(a/div)
+  b <- ceiling(b/div)
+  c <- (a+b)/2
+  
+  gp <-  ggplot(df, aes()) +
+    geom_line(aes(size, obs), linetype = "dashed", size=1) +
+    geom_line(aes(size, low), colour="blue", size=1) +
+    geom_line(aes(size, up), colour="red", size=1) +
+    ylab("") + xlab("additional indices") +
+    scale_y_continuous(limits=c(a,b), breaks=c(a,c,b), labels=c(a*div, c*div, b*div))
+  
+  if(add_point){
+    gp <- gp + 
+      geom_point(aes(size, low), colour="blue", size=2) +
+      geom_point(aes(size, up), colour="red", size=2)
+  }
+  return(gp)
+}
+
