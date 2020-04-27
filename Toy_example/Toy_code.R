@@ -76,17 +76,25 @@ te
 
 
 # TDP EXAMPLE
-f <- 7
+f <- 10
 B <- 10
-G <- gt(n=20, f=7, B=10, beta0=0, beta=c(20,10,5,0,0,0,0))
-#G <- G[,c(4,6,5,7,1,3,2)]
-G <- G[,c(3,2,5,7,1,4,6)]
+G <- gt(n=20, f=10, B=10, beta0=0, beta=c(30,20,10,5,5,5,5,5,5,5))
+G <- G[,c(10,8,6,5,7,9,2,4,1,3)]
 c <- ctrp_set(G)
-#S <- c(5,6,7)
+
+S <- c(7,8,9,10)
 s <- length(S)
 m <- f-s
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, F, T)
 te
+
+
+#G <- G[,c(4,6,5,7,1,3,2)]
+#G <- G[,c(3,2,5,7,1,4,6)]
+#G <- G[,c(1,5,7,3,4,6,2)]
+
+#S <- c(5,6,7)
+
 
 
 gen_sub2 <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=length(S)){
@@ -193,6 +201,28 @@ for(v in(2:(m+1))){
   up[v] <- Qu(Rsum_new[,v], k)
 }
 
+round(up,2)
+round(low,2)
+
+
+
+# z=2
+Dsum_new <- Dsum_new - g$Ds[,s-1]
+Rsum_new <- Rsum_new - g$Rs[,s-1]
+
+
+low <- rep(NA,m+1)
+low[1] <- Qu(Dsum_new[,1], k)
+up <- low
+
+for(v in(2:(m+1))){
+  low[v] <- Qu(Dsum_new[,v], k)
+  up[v] <- Qu(Rsum_new[,v], k)
+}
+
+
+round(up,2)
+round(low,2)
 
 
 
