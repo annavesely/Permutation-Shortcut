@@ -59,207 +59,149 @@ c <- ctrp_set(G)
 S <- c(5)
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, F, T)
 te
-
 bo <- ctrp_bounds(S, c$D, c$R, c$I, 0.20)
-ctrp_plot(bo$low, bo$up)
+ctrp_plot(bo$low, bo$up, TRUE)
+
+S <- c(4,5)
+s <- length(S)
+f <- 5
+m <- f-s
+B <- 10
+k <- 8
+g <- gen_sub2(S, c$D, c$R, c$I, f, m, B, s)
+td <- tdp_bounds(g$Dsum, g$Rsum, g$Ds, g$Rs, k, s, m)
+ctrp_plot(td$L[1,], td$U[1,], TRUE)
 
 
-# SAME, COLUMNS NOT SORTED
 
-# matrix of global test statistics
-G <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
-c <- ctrp_set(G)
 
-# set under testing
-S <- c(3)
-te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, from_low=T, first_rem=T)
-te
+
 
 
 
 
 # TDP EXAMPLE
-f <- 10
-B <- 10
-G <- gt(n=20, f=10, B=10, beta0=0, beta=c(30,20,10,5,5,5,5,5,5,5))
-G <- G[,c(10,8,6,5,7,9,2,4,1,3)]
-c <- ctrp_set(G)
+G0 <- gt(n=20, f=10, B=10, beta0=0, beta=c(30,30,20,10,10,5,5,5,5,5))
+G0 <- G0[,c(10,1,4,3,7,9,2,6,8,5)]
+G <- G0[,c(1,3,4,6,7,9,10)]
 
-S <- c(7,8,9,10)
+f <- 7
+B <- 10
+alpha <- 0.2
+k <- ceiling((1-alpha) * B)
+
+c <- ctrp_set(G)
+S <- c(5,6,7)
 s <- length(S)
 m <- f-s
 te <- ctrp_test(S, c$D, c$R, c$I, 0.20, 20, F, T)
 te
-
-
-#G <- G[,c(4,6,5,7,1,3,2)]
-#G <- G[,c(3,2,5,7,1,4,6)]
-#G <- G[,c(1,5,7,3,4,6,2)]
-
-#S <- c(5,6,7)
-
-
-
-gen_sub2 <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=length(S)){
-  
-  i <- match(S,I[1,])
-  i_D <- f+1-i
-  i_D <- rev(i_D)
-  Ds <- D[,i_D]
-  Dc <- D[,-i_D]
-  
-  # if m=1, then Rc=Dc and Ic are vectors
-  if(m==1){
-    Ic <- rep(I[1,-i], B)
-    Rc <- Dc
-  }else{
-    Ic <- matrix(rep(NA, B*m), ncol=m)
-    Rc <- Ic
-    Is <- matrix(rep(NA, B*s), ncol=s)
-    Rs <- Is
-    Ic[1,] <- I[1,-i]
-    Rc[1,] <- R[1,-i]
-    Is[1,] <- I[1,i]
-    Rs[1,] <- R[1,i]
-    for(x in (2:B)){
-      Sord <- I[x,][I[x,]%in%S]
-      i <- match(Sord, I[x,])
-      Ic[x,] <- I[x,-i]
-      Rc[x,] <- R[x,-i]
-      Is[x,] <- I[x,i]
-      Rs[x,] <- R[x,i]
-    }
-  }
-  ds <- rowSums(Ds)
-  Dsum <- t(apply(cbind(ds, Dc), 1, cumsum))
-  Rsum <- t(apply(cbind(ds, Rc), 1, cumsum))
-  out <- list("ds"=ds, "D"=as.matrix(Dc), "R"=as.matrix(Rc), "I"=as.matrix(Ic),
-              "Dsum"=Dsum, "Rsum"=Rsum, "Ds"=as.matrix(Ds), "Rs"=as.matrix(Rs),
-              "Is"=as.matrix(Is))
-}
-
+bo <- ctrp_bounds(S, c$D, c$R, c$I, 0.20)
+ctrp_plot(bo$low, bo$up, TRUE)
 
 g <- gen_sub2(S, c$D, c$R, c$I, f, m, B, s)
+td <- tdp_bounds(g$Dsum, g$Rsum, g$Ds, g$Rs, k, s, m)
+
+ctrp_plot(td$L[2,], td$U[2,], TRUE) # z=1, BAB needed
+ctrp_plot(td$L[3,], td$U[3,], TRUE) # z=2, non-rejection
 
 
+round(td$U[2,],2)
+round(td$L[2,],2)
 
 
+#BAB - removal of highest not in S
 
-
-
-alpha <- 0.2
-k <- ceiling(alpha * B)
-
-
-
-# Given a vector X and a value k, it returns the critical value
-# i.e. the k-th statistic (when sorted in increasing order)
-Qu <- function(X, k){
-  Xord <- sort(X, na.last = NA, decreasing=F, method="quick")
-  return(Xord[k])
-}
-
-
-tdp_bounds <- function(Dsum, Rsum, Ds, Rs, s=ncol(Rs), m=ncol(Dsum)-1, k){
-  
-  z <- 0
-  cond <- TRUE
-  Dsum_z <- Dsum
-  Rsum_z <- Rsum
-  
-  low <- rep(NA,m+1)
-  up <- low
-  
-  while(cond & z<s){
-    z <- z+1
-    Dsum_z <- Dsum_z - Ds[,s-z+1]
-    Rsum_z <- Rsum_z - Rs[,s-z+1]
-    low[1] <- Qu(Dsum_new[,1], k)
-    up[1] <- low[1]
-    low[m+1] <- Qu(Dsum_new[,m+1], k)
-    up[m+1] <- low[m+1]
-    
-    for(v in(2:m)){
-      low[v] <- Qu(Dsum_new[,v], k)
-      up[v] <- Qu(Rsum_new[,v], k)
-    }
+new_node <- function(dfixed, D0, R0, I0, m0){
+  m <- m0 - 1
+  D <- D0[,-m0]
+  I <- matrix(rep(0, B*m), ncol=m)
+  R <- I
+  e <- I0[1,1]
+  I[1,] <- I0[1,-1]
+  for(x in (2:B)){
+    i <- match(e, I0[x,])
+    I[x,] <- I0[x,-i]
+    R[x,] <- R0[x,-i]
   }
-  
-  return(list("low"=low, "up"=up))
+  Dsum <- t(apply(cbind(dfixed, D), 1, cumsum))
+  Rsum <- t(apply(cbind(dfixed, R), 1, cumsum))
+  out <- list("dfixed"=dfixed, "D"=D, "R"=R, "I"=I, "Dsum"=Dsum, "Rsum"=Rsum)
+  return(out)
 }
 
+# check (2,3) -> rejection
+h <- 1
+N1 <- new_node(g$ds, g$D, g$R, g$I, m)
+td <- tdp_bounds(N1$Dsum, N1$Rsum, g$Ds, g$Rs, k, s, m-1)
+ctrp_plot(td$L[2,], td$U[2,], TRUE)
+round(td$U[2,],2)
+round(td$L[2,],2)
+
+# dx: check (1,2) -> (1,2)
+N1$Dsum <- N1$Dsum + g$D[,m-h+1]
+N1$Rsum <- N1$Rsum + g$D[,m-h+1]
+N1$dfixed <- N1$dfixed + g$D[,m-h+1]
+td <- tdp_bounds(N1$Dsum, N1$Rsum, g$Ds, g$Rs, k, s, m-h)
+ctrp_plot(td$L[2,], td$U[2,], TRUE)
+round(td$U[2,],2)
+round(td$L[2,],2)
+
+# check (1,2) -> rejection
+h <- 2
+N2 <- new_node(N1$dfixed, N1$D, N1$R, N1$I, m-h+1)
+td <- tdp_bounds(N2$Dsum, N2$Rsum, g$Ds, g$Rs, k, s, m-h)
+ctrp_plot(td$L[2,], td$U[2,], TRUE)
+round(td$U[2,],2)
+round(td$L[2,],2)
 
 
-# z=1
-Dsum_new <- g$Dsum - g$Ds[,s]
-Rsum_new <- g$Rsum - g$Rs[,s]
-w1 <- write_bounds(Dsum_new, Rsum_new, k, m)
-round(w1$up,2)
-round(w1$low,2)
-ctrp_plot(w1$low, w1$up, TRUE)
-# always rejected
-
-# z=2
-Dsum_new <- Dsum_new - g$Ds[,s-1]
-Rsum_new <- Rsum_new - g$Rs[,s-1]
-w2 <- write_bounds(Dsum_new, Rsum_new, k, m)
-round(w2$up,2)
-round(w2$low,2)
-ctrp_plot(w2$low, w2$up, TRUE)
-# rejected only by lower
-
-
-# z=3
-Dsum_new <- Dsum_new - g$Ds[,s-2]
-Rsum_new <- Rsum_new - g$Rs[,s-2]
-w3 <- write_bounds(Dsum_new, Rsum_new, k, m)
-round(w3$up,2)
-round(w3$low,2)
-ctrp_plot(w3$low, w3$up, TRUE)
-# rejected only by lower
+# dx: check (1,2) -> non-rejection
+N2$Dsum <- N2$Dsum + g$D[,m-h+1]
+N2$Rsum <- N2$Rsum + g$D[,m-h+1]
+N2$dfixed <- N2$dfixed + g$D[,m-h+1]
+td <- tdp_bounds(N2$Dsum, N2$Rsum, g$Ds, g$Rs, k, s, m-h)
+ctrp_plot(td$L[2,], td$U[2,], TRUE)
+round(td$U[2,],2)
+round(td$L[2,],2)
 
 
 
 
+#BAB - removal of highest in S
 
-### -------------------------------------- ###
-
-
-mycheck <- function(S, D, R, I, alpha, n_max=20){
-  
-  lr <- ctrp_test(S, D, R, I, alpha, n_max, from_low=T, first_rem=T) # remove low
-  lk <- ctrp_test(S, D, R, I, alpha, n_max, from_low=T, first_rem=F) # keep low
-  hr <- ctrp_test(S, D, R, I, alpha, n_max, from_low=F, first_rem=T) # remove high
-  hk <- ctrp_test(S, D, R, I, alpha, n_max, from_low=F, first_rem=F) # keep high
-  
-  cond <- (lr$non_rej == lk$non_rej & lk$non_rej == hr$non_rej & hr$non_rej == hk$non_rej)
-  babs <- c(lr$BAB, lk$BAB, hr$BAB, hk$BAB)
-  out <- list("non_rej"=lr$non_rej, "BABs"=babs, "cond"=cond)
+new_node2 <- function(dfixed, Ds0, Rs0, Is0, Dsum, Rsum, s0){
+  s <- s0 - 1
+  Ds <- Ds0[,-s0]
+  Is <- matrix(rep(0, B*s), ncol=s)
+  Rs <- Is
+  e <- Is0[1,1]
+  Is[1,] <- Is0[1,-1]
+  for(x in (2:B)){
+    i <- match(e, Is0[x,])
+    Is[x,] <- Is0[x,-i]
+    Rs[x,] <- Rs0[x,-i]
+  }
+  dfixed <- dfixed - Ds0[,s0]
+  Dsum <- Dsum - Ds0[,s0]
+  Rsum <- Rsum - Ds0[,s0]
+  out <- list("dfixed"=dfixed, "Ds"=Ds, "Rs"=Rs, "Is"=Is, "Dsum"=Dsum, "Rsum"=Rsum)
   return(out)
 }
 
 
-G <- gt(n=20, f=5, B=10, beta0=0, beta=c(20,10,5,0,0))
-c <- ctrp_set(G)
+# check (2,3) -> rejection
+h <- 1
+N1 <- new_node2(g$ds, g$Ds, g$Rs, g$Is, g$Dsum, g$Rsum, s)
+td <- tdp_bounds(N1$Dsum, N1$Rsum, N1$Ds, N1$Rs, k, s-1, m)
+ctrp_plot(td$L[1,], td$U[1,], TRUE)
+round(td$U[1,],2)
+round(td$L[1,],2)
 
-mycheck(3, c$D, c$R, c$I, 0.20, 20) # 2,4,3,3
-mycheck(1, c$D, c$R, c$I, 0.20, 20) # all 0
-mycheck(c(3,4), c$D, c$R, c$I, 0.20, 20) # all 0
-mycheck(c(1,4), c$D, c$R, c$I, 0.20, 20) # all 0
-mycheck(c(1,2,3,4), c$D, c$R, c$I, 0.20, 20) # all 0
-mycheck(c(1,2,3,4,5), c$D, c$R, c$I, 0.20, 20) # all 0
 
-G <- gt(n=20, f=10, B=400, beta0=0, beta=c(20,0,5,0,0,0,0,0,0,0))
-G <- G[,c(9,4,5,3,10,6,2,8,7,1)]
-c <- ctrp_set(G)
-mycheck(3, c$D, c$R, c$I, 0.20, 20)
-mycheck(c(2,10), c$D, c$R, c$I, 0.20, 50) # 13,13,4,4
-mycheck(c(3,4), c$D, c$R, c$I, 0.20, 20)
-mycheck(c(1,4), c$D, c$R, c$I, 0.20, 20)
-mycheck(c(1,2,3,4), c$D, c$R, c$I, 0.20, 20)
-mycheck(c(1,2,3,4,5), c$D, c$R, c$I, 0.20, 20)
 
-mycheck(10, c$D, c$R, c$I, 0.20, 50) #34,34,14,14
-mycheck(c(3,10), c$D, c$R, c$I, 0.20, 50) # 16,16,6,6
-#G <- gt(n=20, f=5, B=100, beta0=0, beta=c(100,1,0,0,0))
+
+
+
+
 

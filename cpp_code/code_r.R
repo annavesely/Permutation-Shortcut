@@ -121,7 +121,70 @@ ctrp_test <- function(S, D, R, I, alpha=0.05, n_max=10000, from_low=T, first_rem
 
 
 
-# PLOT FOR THE BOUNDS #
+# ------------------------------------------------------------#
+# TRUE DISCOVERY PROPORTION
+
+
+
+# Internal function
+# Given a set S of indices, and the matrices D, R and I given by ctrp_set,
+# m=ncol(D)-length(S), B=nrow(D) and s=length(S), it splits D, R and I and returns:
+# ds, vector of the test statistics for S
+# matrix Ds with only the indices in S
+# matrix D with only the indices not in S
+# matrix Rs with only the indices in S
+# matrix R with only the indices not in S
+# matrices Dsum and Rsum of the cumulative sums of ds with D and R
+
+# FINISH WITH CASES SUCH AS s=1 (as in gen_sub)
+# IT WILL SUBSTITUTE gen_sub
+# MAYBE WRITE IN C?
+
+gen_sub2 <- function(S, D, R, I, f=ncol(D), m=ncol(D)-length(S), B=nrow(D), s=length(S)){
+  
+  Sord <- I[1,][I[1,]%in%S]
+  i <- match(Sord, I[1,])
+  iD <- rev(f+1-i)
+  
+  #i_D <- rev(i_D)
+  Ds <- D[,iD]
+  Dc <- D[,-iD]
+  
+  # if m=1, then Rc=Dc and Ic are vectors
+  if(m==1){
+    Ic <- rep(I[1,-i], B)
+    Rc <- Dc
+  }else{
+    Ic <- matrix(rep(0, B*m), ncol=m)
+    Rc <- Ic
+    Is <- matrix(rep(0, B*s), ncol=s)
+    Rs <- Is
+    Ic[1,] <- I[1,-i]
+    Is[1,] <- I[1,i]
+    for(x in (2:B)){
+      Sord <- I[x,][I[x,]%in%S]
+      i <- match(Sord, I[x,])
+      Ic[x,] <- I[x,-i]
+      Rc[x,] <- R[x,-i]
+      Is[x,] <- I[x,i]
+      Rs[x,] <- R[x,i]
+    }
+  }
+  ds <- rowSums(Ds)
+  Dsum <- t(apply(cbind(ds, Dc), 1, cumsum))
+  Rsum <- t(apply(cbind(ds, Rc), 1, cumsum))
+  out <- list("ds"=ds, "D"=as.matrix(Dc), "R"=as.matrix(Rc), "I"=as.matrix(Ic),
+              "Dsum"=Dsum, "Rsum"=Rsum, "Ds"=as.matrix(Ds), "Rs"=as.matrix(Rs),
+              "Is"=as.matrix(Is))
+}
+
+
+
+
+# ------------------------------------------------------------#
+# PLOTS FOR THE BOUNDS
+
+
 
 # Given a vector X and a value k, it returns the critical value
 # i.e. the k-th statistic (when sorted in increasing order)
@@ -190,7 +253,6 @@ ctrp_bounds <- function(S, D, R, I, alpha=0.05){
 # A correction in applied for vectors having values <= -1e+155
 
 require(ggplot2)
-
 ctrp_plot <- function(low, up, add_point=FALSE){
   
   a <- min(0,low)
@@ -211,7 +273,7 @@ ctrp_plot <- function(low, up, add_point=FALSE){
     geom_line(aes(size, low), colour="blue", size=1) +
     geom_line(aes(size, up), colour="red", size=1) +
     ylab("") + xlab("additional indices") +
-    scale_y_continuous(limits=c(a,b), breaks=c(a,c,b), labels=c(a*div, c*div, b*div))
+    scale_y_continuous(limits=c(a,b), breaks=c(a,c,0,b), labels=c(a*div, c*div, 0, b*div))
   
   if(add_point){
     gp <- gp + 
@@ -220,4 +282,41 @@ ctrp_plot <- function(low, up, add_point=FALSE){
   }
   return(gp)
 }
+
+
+
+
+# Given the matrices Dsum, Rsum, Ds and Rs as returned by gen_sub,
+# the index k, s=ncol(Ds) and m=ncol(Dsum)-1,
+# it returns the s x (m+1) matrices L and U
+# where the z-th row is the vector of the lower/upper critical values
+# for each superset size v (z=0,...,s and v=0,...,m)
+
+# FINISH FOR m=0 and s=1
+
+tdp_bounds <- function(Dsum, Rsum, Ds, Rs, k, s=ncol(Ds), m=ncol(Dsum)-1){
+  # row z: bounds for v varying from 0 to m
+  L <- matrix(rep(NA, s*(m+1)), ncol=m+1)
+  U <- L
+  
+  Dsum_new <- Dsum
+  Rsum_new <- Rsum
+  w <- write_bounds(Dsum_new, Rsum_new, k, m)
+  L[1,] <- w$low
+  U[1,] <- w$up
+  
+  
+  for(z in(1:(s-1))){
+    Dsum_new <- Dsum_new - g$Ds[,s-z+1]
+    Rsum_new <- Rsum_new - g$Rs[,s-z+1]
+    w <- write_bounds(Dsum_new, Rsum_new, k, m)
+    L[z+1,] <- w$low
+    U[z+1,] <- w$up
+  }
+  out <- list("L"=L, "U"=U)
+  return(out)
+}
+
+
+
 
